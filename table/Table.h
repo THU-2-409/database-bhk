@@ -248,6 +248,7 @@ bool Table::open(string path) {
 pair<bool,Record> Table::insertRecord(Record record){
     if(record.page>=0)
         return make_pair(false,null);
+    record.setInt("#rid",__RID__++);
     char* buf = getChars(record.page,record.offset,recordLength);
     recordNumber++;
     int insertPage = -1;
