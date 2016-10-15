@@ -21,14 +21,8 @@ public:
 		for(pvi = rawVector.begin();pvi!=rawVector.end();pvi++)
 			thVector.push_back(*pvi);
 	}
-	PAIRVECTOR::iterator operator[](const int index){
-		PAIRVECTOR::iterator pvi = thVector.begin();
-		int i = 0;
-		while(i<index){
-			i++;
-			pvi++;
-		}
-		return pvi;
+	PAIR operator[](const int index){
+		return thVector[index];
 	}
 	int getSize(){
 		return thVector.size();

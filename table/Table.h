@@ -29,9 +29,11 @@ private:
     FileManager fileManager;
 };
 
-static pair<bool, Table> Table::createFile(TableHeader header, string path) 
+pair<bool, Table> Table::createFile(TableHeader header, string path) 
 {
-    if ()
+    Table table;
+    if (!fileManager.createFile(path.c_str())) return make_pair(false, table);
+    //table.
 }
 
 int Table::deleteFile(string path){
@@ -39,3 +41,4 @@ int Table::deleteFile(string path){
 }
 
 #endif
+// vim: ts=4
