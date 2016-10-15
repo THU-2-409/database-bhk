@@ -9,6 +9,7 @@
 #include <utility>
 #include <string>
 #include <cstring>
+#include <vector>
 #include <list>
 #include <stdio.h>
 #define PAGE_SIZE 8192
@@ -25,7 +26,7 @@ public:
     Record insertRecord(Record record);
     bool deleteRecord(Record record);
     bool updateRecord(Record real, Record dummy);
-    list<Record> selectRecord(Record cond);
+    pair<bool,Record> selectRecord(Record cond);
 
 	TableHeader th;
 private:
@@ -46,6 +47,7 @@ private:
     int memPageTop;
 	int FileID;
     // 第一页,表信息，内存备份
+    int __RID__; // R!I!D!
     int recordLength, numOfColumns, recordNumber, pageNumber;
     vector<int> recordNumOfPage, availOfPage;
 
@@ -57,7 +59,9 @@ void Table::_writeInfo2Hard() // 将第一页信息写入文件系统
     char* buf = new char[PAGE_SIZE];
     int offset = 0;
     // 写入缓存
-    memcpy(buf, &recordLength, sizeof(int)); // 记录长度
+    memcpy(buf + offset, &__RID__, sizeof(int)); // R!I!D!
+    offset += sizeof(int);
+    memcpy(buf + offset, &recordLength, sizeof(int)); // 记录长度
     offset += sizeof(int);
     memcpy(buf + offset, &numOfColumns, sizeof(int)); // 列数
     offset += sizeof(int);
@@ -94,8 +98,6 @@ pair<bool, Table> Table::createFile(TableHeader header, string path)
     if (!fileManager.createFile(path.c_str())) return make_pair(false, table);
     table.th = header;
     if (!table.open(path)) return make_pair(false, table);
-    int offset = 0;
-    int tmp = 0;
     // 计算信息
     table.recordLength = 0;
     table.numOfColumns = header.getSize();
@@ -310,7 +312,25 @@ bool Table::updateRecord(Record real, Record dummy) {
         return setChars(real.page, real.offset, res, recordLength);
     } else
         return false;
+}
 
+pair<bool,Record> Table::selectRecord(Record cond)
+{
+    if (cond.page >= 0) return make_pair(false, Record(this,false));
+    int len = ((recordLength << 3) + 1) >> 16; // ((1<<13)=8192)*8 bits
+    for (int p = 1; p < pageNumber; ++p)
+        if (recordNumOfPage[p] > 0)
+        {
+            char *buf = getChars()
+            for (int index = 0, row = 0, col = 0; index < len; ++index, ++col)
+            {
+                if (col == 8) 
+                {
+                    ++ row;
+                    col = 0;
+                }
+            }
+        }
 }
 
 #endif
