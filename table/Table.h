@@ -48,6 +48,8 @@ private:
     // 第一页,表信息，内存备份
     int recordLength, numOfColumns, recordNumber, pageNumber;
     vector<int> recordNumOfPage, availOfPage;
+
+    static int check[256];
 };
 
 void Table::_writeInfo2Hard() // 将第一页信息写入文件系统
@@ -204,6 +206,68 @@ bool Table::open(string path) {
     }
 }
 
+pair<bool,Record> Table::insertRecord(Record record){
+    if(record.page>=0)
+        return make_pair(false,null);
+    char* buf = getChars(record.page,record.offset,recordLength);
+    recordNumber++;
+    int insertPage = -1;
+    for(int i = 1; i < pageNumber; i++){
+        if(availOfPage[i]>=0){
+            insertPage = i;
+            break;
+        }
+    }
+    int recordLimit = (PAGE_SIZE<<3) / ( (recordLength<<3) + 1);
+    int byteLength = (recordLimit+7) / 8;
+    if(insertPage==-1){
+        insertPage = pageNumber;
+        pageNumber++;
+        recordNumber.push_back(1);
+        availOfPage.push_back(1);
+        char* buffer = new char[byteLength];
+        memset(buffer,0,sizeof(char)*byteLength);
+        memset(buffer+byteLength-1, 0x01 , 1);
+        setChars(insertPage,PAGE_SIZE-byteLength,byteLength);
+        setChars(insertPage,0,buf,recordLength);
+        //Record rec(this,false,insertPage,0);
+        return make_pair(true, Record(this, false, insertPage, 0));
+    }
+    else{
+        int offset = availOfPage[insertPage]*recordLength;
+        setChars(insertPage,offset,buf,recordLength);
+        Record rec(this,false,insertPage,offset); 
+
+        recordNumber[insertPage]++;
+        int byteIndex = (availOfPage[insertPage])/8+1;// 位数组从下标0开始
+        int bitIndex = availOfPage[insertPage]%8;
+        byte theByte = (1 << bitIndex);
+        char* oldByte = getChars(insertPage,PAGE_SIZE-byteIndex,1);
+        byte old = (byte)*oldByte;
+        byte newByte = theByte | old;
+        char* buffer = new char[1];
+        memset(buffer,&newByte,1);
+        setChars(insertPage,PAGE_SIZE-byteIndex,buffer,1);
+        if(recordNumber[insertPage]==recordLimit){
+            availOfPage[insertPage] = -1;
+        }
+        else{
+            buffer = getChars(insertPage,PAGE_SIZE-byteLength,byteLength);
+            int i,y;
+            for(i = 0; i < byteLength; i++){
+                byte x;
+                memcpy(&x,buffer+byteLength-i-1,sizeof(byte));
+                int yy = (x+1)&(~x)
+                if(yy>0){
+                    y = check[yy - 1];
+                    break;
+                }
+            }
+            availOfPage[insertPage] = i*8 + y-1;
+        }
+        return make_pair(true,rec);
+    }
+}
 
 #endif
 // vim: ts=4
