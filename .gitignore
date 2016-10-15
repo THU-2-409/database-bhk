@@ -27,3 +27,13 @@
 *.exe
 *.out
 *.app
+
+# vim
+*.swp
+
+# 课上给的模块
+/bufmanager/
+/Debug/
+/fileio/
+/utils/
+testfilesystem.cpp
