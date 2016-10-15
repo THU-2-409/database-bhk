@@ -35,7 +35,7 @@
 #/bufmanager/
 /Debug/
 #/fileio/
-/utils/
+#/utils/
 testfilesystem.cpp
 
 # ? 文件
