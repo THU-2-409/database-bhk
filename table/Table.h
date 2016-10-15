@@ -52,29 +52,36 @@ private:
 void Table::_writeInfo2Hard() // 将第一页信息写入文件系统
 {
     char* buf = new char[PAGE_SIZE];
+    int offset = 0;
     // 写入缓存
-    memcpy(buf, &table.recordLength, sizeof(int)); // 记录长度
+    memcpy(buf, &recordLength, sizeof(int)); // 记录长度
     offset += sizeof(int);
-    memcpy(buf + offset, &table.numOfColumns, sizeof(int)); // 列数
+    memcpy(buf + offset, &numOfColumns, sizeof(int)); // 列数
     offset += sizeof(int);
-    for (int i = 0; i < header.getSize(); ++i) // 写入Header.second
+    for (int i = 0; i < th.getSize(); ++i) // 写入Header.second
     {
-        memcpy(buf + offset, &(header[i].second), sizeof(int));
+        memcpy(buf + offset, &(th[i].second), sizeof(int));
         offset += sizeof(int);
     }
-    for (int i = 0; i < header.getSize(); ++i) // 写入Header.first
+    for (int i = 0; i < th.getSize(); ++i) // 写入Header.first
     {
-        tmp = header[i].first.length();
+        tmp = th[i].first.length();
         memcpy(buf + offset, &tmp, sizeof(int)); // 写入Header.first.length
         offset += sizeof(int);
-        memcpy(buf + offset, header[i].first.c_str(), tmp); // 写入Header.first
+        memcpy(buf + offset, th[i].first.c_str(), tmp); // 写入Header.first
         offset += tmp;
     }
-    memcpy(buf + offset, &table.recordNumber, sizeof(int)); // 写入记录总数
+    memcpy(buf + offset, &recordNumber, sizeof(int)); // 写入记录总数
     offset += sizeof(int);
-    memcpy(buf + offset, &table.pageNumber, sizeof(int)); // 写入页数
+    memcpy(buf + offset, &pageNumber, sizeof(int)); // 写入页数
     offset += sizeof(int);
-    // 因为create的时候没有页，所以余下都是空的
+    for (int i = 0; i < pageNumber; ++i)
+    {
+        memcpy(buf + offset, &recordNumOfPage[i], sizeof(int)); // 每一页的记录个数
+        offset += sizeof(int);
+        memcpy(buf + offset, &availOfPage[i], sizeof(int)); // 每一页的第一个空位
+        offset += sizeof(int);
+    }
 
     // 写入文件系统
     table.setChars(0, 0, buf, offset);
