@@ -32,6 +32,7 @@
 *.swp
 
 # 课上给的模块
+#
 #/bufmanager/
 /Debug/
 #/fileio/
@@ -40,3 +41,6 @@ testfilesystem.cpp
 
 # ? 文件
 .DS_Store
+
+.idea/*
+CMakeLists.txt
