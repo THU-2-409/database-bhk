@@ -6,7 +6,7 @@
 #define RECORD_H
 
 #include <string>
-#include "utils/pagedef.h"
+#include "../utils/pagedef.h"
 
 using namespace std;
 class Record {

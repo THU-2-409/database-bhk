@@ -9,6 +9,7 @@
 #include <utility>
 #include <string>
 #include <list>
+#include <stdio.h>
 using namespace std;
 
 class Table {
@@ -16,7 +17,7 @@ public:
     Table() {}
     friend class Record;
     static pair<bool, Table> createFile(TableHeader header, string path);
-    static bool deleteFile(string path);
+    static int deleteFile(string path);
     Record insertRecord(Record record);
     bool deleteRecord(Record record);
     bool updateRecord(Record real, Record dummy);
@@ -31,6 +32,10 @@ private:
 static pair<bool, Table> Table::createFile(TableHeader header, string path) 
 {
     if ()
+}
+
+int Table::deleteFile(string path){
+	return remove(path);
 }
 
 #endif
