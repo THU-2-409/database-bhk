@@ -4,8 +4,11 @@
 
 #include "Record.h"
 
-Record::Record(Table* _table ,int _page, int _offset) {
-    page = _page;
+Record::Record(Table* _table, bool img ,int _page, int _offset) {
+    if(img)
+        page = _page;
+    else
+        page = table->newMemPage();
     offset = _offset;
     table = _table;
 }
@@ -64,4 +67,9 @@ bool Record::setString(string thName, string value) {
     }
     int totalOffsetInPage = headOffset + offset;
     return table->setChars(page, totalOffsetInPage, const_cast<char*>(value.c_str()), strLen);
+}
+
+Record::~Record() {
+    if(page < 0)
+        table->releaseMemPage(page);
 }

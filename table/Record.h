@@ -17,14 +17,15 @@ class Record {
     };
     Table* table;
     friend class Table;
-    void switchBtwImgReal();
+    //void switchBtwImgReal();
 public:
     int getInt(string);
     string getString(string);
     bool setInt(string, int);
     bool setString(string, string);
 
-    Record(Table* _table, int _page = -1, int _offset = -1);
+    Record(Table* _table, bool img, int _page = -1, int _offset = -1);
+    ~Record();
 };
 
 
