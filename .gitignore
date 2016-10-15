@@ -41,3 +41,6 @@ testfilesystem.cpp
 
 # ? 文件
 .DS_Store
+
+.idea/*
+CMakeLists.txt

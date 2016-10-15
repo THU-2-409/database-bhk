@@ -6,8 +6,8 @@
 #define RECORD_H
 
 #include <string>
-#include "utils/pagedef.h"
-
+#include "../utils/pagedef.h"
+#include "Table.h"
 using namespace std;
 class Record {
     int page;
@@ -20,11 +20,10 @@ class Record {
 public:
     int getInt(string);
     string getString(string);
-    void setInt(string);
-    void setString(string);
+    bool setInt(string, int);
+    bool setString(string, string);
 
-    Record(int _page = -1, int _offset = -1);
-
+    Record(Table* _table, int _page = -1, int _offset = -1);
 };
 
 
