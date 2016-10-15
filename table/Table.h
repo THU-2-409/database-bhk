@@ -13,11 +13,15 @@
 using namespace std;
 
 class Table {
+	TableHeader* th;
+	int FileID;
 public:
     Table() {}
     friend class Record;
     static pair<bool, Table> createFile(TableHeader header, string path);
     static int deleteFile(string path);
+    bool open(string path);
+    bool close();
     Record insertRecord(Record record);
     bool deleteRecord(Record record);
     bool updateRecord(Record real, Record dummy);
