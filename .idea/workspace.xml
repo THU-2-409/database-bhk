@@ -36,8 +36,15 @@
         <entry file="file://$PROJECT_DIR$/table/Record.cpp">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="1095">
-              <caret line="73" column="21" selection-start-line="73" selection-start-column="21" selection-end-line="73" selection-end-column="21" />
-              <folding />
+              <caret line="74" column="1" selection-start-line="74" selection-start-column="1" selection-end-line="74" selection-end-column="1" />
+              <folding>
+                <marker date="1476541549000" expanded="true" signature="0:42" ph="//..." />
+                <marker date="1476541549000" expanded="true" signature="129:254" ph="{...}" />
+                <marker date="1476541549000" expanded="true" signature="290:659" ph="{...}" />
+                <marker date="1476541549000" expanded="true" signature="701:1111" ph="{...}" />
+                <marker date="1476541549000" expanded="true" signature="1159:1508" ph="{...}" />
+                <marker date="1476541549000" expanded="true" signature="1562:1983" ph="{...}" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -67,12 +74,9 @@
       <file leaf-file-name="Table.h" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/table/Table.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="279">
-              <caret line="213" column="4" selection-start-line="213" selection-start-column="4" selection-end-line="213" selection-end-column="4" />
-              <folding>
-                <marker date="1476539302000" expanded="false" signature="4300:4610" ph="{...}" />
-                <marker date="1476539302000" expanded="false" signature="4646:4671" ph="{...}" />
-              </folding>
+            <state relative-caret-position="264">
+              <caret line="210" column="26" selection-start-line="210" selection-start-column="26" selection-end-line="210" selection-end-column="26" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -80,8 +84,8 @@
       <file leaf-file-name="README.md" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/README.md">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="4" column="7" selection-start-line="4" selection-start-column="7" selection-end-line="4" selection-end-column="7" />
+            <state relative-caret-position="120">
+              <caret line="8" column="4" selection-start-line="8" selection-start-column="4" selection-end-line="8" selection-end-column="4" />
               <folding />
             </state>
           </provider>
@@ -410,12 +414,12 @@
       <option name="presentableId" value="Default" />
       <updated>1476522690838</updated>
       <workItem from="1476522694050" duration="4437000" />
-      <workItem from="1476534658508" duration="4588000" />
+      <workItem from="1476534658508" duration="6434000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="9025000" />
+    <option name="totallyTimeSpent" value="10871000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1280" height="773" extended-state="6" />
@@ -460,7 +464,14 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1095">
           <caret line="73" column="21" selection-start-line="73" selection-start-column="21" selection-end-line="73" selection-end-column="21" />
-          <folding />
+          <folding>
+            <marker date="1476541549000" expanded="true" signature="0:42" ph="//..." />
+            <marker date="1476541549000" expanded="true" signature="129:254" ph="{...}" />
+            <marker date="1476541549000" expanded="true" signature="290:659" ph="{...}" />
+            <marker date="1476541549000" expanded="true" signature="701:1111" ph="{...}" />
+            <marker date="1476541549000" expanded="true" signature="1159:1508" ph="{...}" />
+            <marker date="1476541549000" expanded="true" signature="1562:1983" ph="{...}" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -486,10 +497,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="480">
           <caret line="32" column="22" selection-start-line="32" selection-start-column="22" selection-end-line="32" selection-end-column="22" />
-          <folding>
-            <marker date="1476539302000" expanded="false" signature="4300:4610" ph="{...}" />
-            <marker date="1476539302000" expanded="false" signature="4646:4671" ph="{...}" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -561,8 +569,15 @@
     <entry file="file://$PROJECT_DIR$/table/Record.cpp">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1095">
-          <caret line="73" column="21" selection-start-line="73" selection-start-column="21" selection-end-line="73" selection-end-column="21" />
-          <folding />
+          <caret line="74" column="1" selection-start-line="74" selection-start-column="1" selection-end-line="74" selection-end-column="1" />
+          <folding>
+            <marker date="1476541549000" expanded="true" signature="0:42" ph="//..." />
+            <marker date="1476541549000" expanded="true" signature="129:254" ph="{...}" />
+            <marker date="1476541549000" expanded="true" signature="290:659" ph="{...}" />
+            <marker date="1476541549000" expanded="true" signature="701:1111" ph="{...}" />
+            <marker date="1476541549000" expanded="true" signature="1159:1508" ph="{...}" />
+            <marker date="1476541549000" expanded="true" signature="1562:1983" ph="{...}" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -596,20 +611,17 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="7" selection-start-line="4" selection-start-column="7" selection-end-line="4" selection-end-column="7" />
+        <state relative-caret-position="120">
+          <caret line="8" column="4" selection-start-line="8" selection-start-column="4" selection-end-line="8" selection-end-column="4" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/table/Table.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="279">
-          <caret line="213" column="4" selection-start-line="213" selection-start-column="4" selection-end-line="213" selection-end-column="4" />
-          <folding>
-            <marker date="1476539302000" expanded="false" signature="4300:4610" ph="{...}" />
-            <marker date="1476539302000" expanded="false" signature="4646:4671" ph="{...}" />
-          </folding>
+        <state relative-caret-position="264">
+          <caret line="210" column="26" selection-start-line="210" selection-start-column="26" selection-end-line="210" selection-end-column="26" />
+          <folding />
         </state>
       </provider>
     </entry>
