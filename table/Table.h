@@ -202,40 +202,42 @@ bool Table::open(string path) {
     //vector<int> recordNumOfPage, availOfPage;
     //into memory
     fileManager.openFile(path.c_str(), FileID);
-    int offset = 0;
-    recordLength = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+    char* offset = getChars(0, 0, PAGE_SIZE);
+
+    recordLength = *(reinterpret_cast<int*>(offset));
     offset += sizeof(int);
-    numOfColumns = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+    numOfColumns = *(reinterpret_cast<int*>(offset));
     offset += sizeof(int);
 
     PAIR* tem = new PAIR[numOfColumns];
     for(int i = 0; i < numOfColumns; ++ i){//读出每一个表项的长度
-        tem[i].second = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+        tem[i].second = *(reinterpret_cast<int*>(offset));
         offset += sizeof(int);
     }
     for(int i = 0; i < numOfColumns; ++ i){//读出每个表项的名称
-        int temLen = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+        int temLen = *(reinterpret_cast<int*>(offset));
         offset += sizeof(int);//读出表项名称的长度
-        tem[i].first = getChars(0, offset, temLen);
+        tem[i].first = offset;
         offset += temLen;
     }
     PAIRVECTOR pairvector(tem, tem + numOfColumns);
     th.thVector = pairvector;
 
-    recordNumber = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+    recordNumber = *(reinterpret_cast<int*>(offset));
     offset += sizeof(int);
-    pageNumber = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+    pageNumber = *(reinterpret_cast<int*>(offset));
     offset += sizeof(int);
     for(int i = 0; i < pageNumber; ++ i){
-        recordNumOfPage[i] = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+        recordNumOfPage[i] = *(reinterpret_cast<int*>(offset));
         offset += sizeof(int);
-        availOfPage[i] = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+        availOfPage[i] = *(reinterpret_cast<int*>(offset));
         offset += sizeof(int);
     }
 
 
     for(int i = 0; i < 9; ++ i)
         check[1 << i - 1] = i;
+
 }
 
 
