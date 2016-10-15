@@ -17,6 +17,7 @@ class Record {
     };
     Table* table;
     friend class Table;
+    void switchBtwImgReal();
 public:
     int getInt(string);
     string getString(string);
