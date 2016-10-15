@@ -24,11 +24,13 @@ public:
 private:
     BufType getBuf(int page, int offset, int size);
     bool setBuf(int page, int offset, BufType buf, int size);
+
+    FileManager fileManager;
 };
 
 static pair<bool, Table> Table::createFile(TableHeader header, string path) 
 {
-
+    if ()
 }
 
 #endif
