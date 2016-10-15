@@ -32,8 +32,11 @@
 *.swp
 
 # 课上给的模块
-/bufmanager/
+#/bufmanager/
 /Debug/
-/fileio/
+#/fileio/
 /utils/
 testfilesystem.cpp
+
+# ? 文件
+.DS_Store
