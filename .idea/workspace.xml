@@ -13,7 +13,6 @@
   <component name="ChangeListManager">
     <list default="true" id="0650cece-d985-4a0d-b3c3-07a068e14bbb" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/table/Table.h" afterPath="$PROJECT_DIR$/table/Table.h" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/table/TableHeader.h" afterPath="$PROJECT_DIR$/table/TableHeader.h" />
     </list>
     <ignored path="database-bhk.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -68,14 +67,11 @@
       <file leaf-file-name="Table.h" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/table/Table.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="443">
-              <caret line="188" column="29" selection-start-line="188" selection-start-column="29" selection-end-line="188" selection-end-column="29" />
+            <state relative-caret-position="279">
+              <caret line="213" column="4" selection-start-line="213" selection-start-column="4" selection-end-line="213" selection-end-column="4" />
               <folding>
-                <marker date="1476537952000" expanded="false" signature="2682:3247" ph="{...}" />
-                <marker date="1476537952000" expanded="false" signature="3282:3692" ph="{...}" />
-                <marker date="1476537952000" expanded="false" signature="3748:3952" ph="{...}" />
-                <marker date="1476537952000" expanded="false" signature="4011:4472" ph="{...}" />
-                <marker date="1476537952000" expanded="false" signature="4508:4533" ph="{...}" />
+                <marker date="1476539302000" expanded="false" signature="4300:4610" ph="{...}" />
+                <marker date="1476539302000" expanded="false" signature="4646:4671" ph="{...}" />
               </folding>
             </state>
           </provider>
@@ -414,12 +410,12 @@
       <option name="presentableId" value="Default" />
       <updated>1476522690838</updated>
       <workItem from="1476522694050" duration="4437000" />
-      <workItem from="1476534658508" duration="3405000" />
+      <workItem from="1476534658508" duration="4588000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="7842000" />
+    <option name="totallyTimeSpent" value="9025000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1280" height="773" extended-state="6" />
@@ -427,11 +423,11 @@
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2494043" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.0" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.0" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24816446" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32892805" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -491,11 +487,8 @@
         <state relative-caret-position="480">
           <caret line="32" column="22" selection-start-line="32" selection-start-column="22" selection-end-line="32" selection-end-column="22" />
           <folding>
-            <marker date="1476537952000" expanded="false" signature="2682:3247" ph="{...}" />
-            <marker date="1476537952000" expanded="false" signature="3282:3692" ph="{...}" />
-            <marker date="1476537952000" expanded="false" signature="3748:3952" ph="{...}" />
-            <marker date="1476537952000" expanded="false" signature="4011:4472" ph="{...}" />
-            <marker date="1476537952000" expanded="false" signature="4508:4533" ph="{...}" />
+            <marker date="1476539302000" expanded="false" signature="4300:4610" ph="{...}" />
+            <marker date="1476539302000" expanded="false" signature="4646:4671" ph="{...}" />
           </folding>
         </state>
       </provider>
@@ -611,14 +604,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/table/Table.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="443">
-          <caret line="188" column="29" selection-start-line="188" selection-start-column="29" selection-end-line="188" selection-end-column="29" />
+        <state relative-caret-position="279">
+          <caret line="213" column="4" selection-start-line="213" selection-start-column="4" selection-end-line="213" selection-end-column="4" />
           <folding>
-            <marker date="1476537952000" expanded="false" signature="2682:3247" ph="{...}" />
-            <marker date="1476537952000" expanded="false" signature="3282:3692" ph="{...}" />
-            <marker date="1476537952000" expanded="false" signature="3748:3952" ph="{...}" />
-            <marker date="1476537952000" expanded="false" signature="4011:4472" ph="{...}" />
-            <marker date="1476537952000" expanded="false" signature="4508:4533" ph="{...}" />
+            <marker date="1476539302000" expanded="false" signature="4300:4610" ph="{...}" />
+            <marker date="1476539302000" expanded="false" signature="4646:4671" ph="{...}" />
           </folding>
         </state>
       </provider>
