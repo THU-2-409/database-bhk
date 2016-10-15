@@ -42,6 +42,7 @@ private:
     BufPageManager bufPageManager;
     map<int,char*> memPages;
     vector<char*> hardPages;
+    vector<int> bufPageIndex;
     int memPageTop;
 	int FileID;
     // 第一页,表信息，内存备份
@@ -65,9 +66,7 @@ void Table::_writeInfo2Hard() // 将第一页信息写入文件系统
     }
     for (int i = 0; i < th.getSize(); ++i) // 写入Header.first
     {
-        tmp = th[i].first.length();
-        memcpy(buf + offset, &tmp, sizeof(int)); // 写入Header.first.length
-        offset += sizeof(int);
+        tmp = th[i].first.length() + 1;
         memcpy(buf + offset, th[i].first.c_str(), tmp); // 写入Header.first
         offset += tmp;
     }
@@ -105,7 +104,7 @@ pair<bool, Table> Table::createFile(TableHeader header, string path)
     for (int i = 0; i < header.getSize(); ++i)
         table.recordLength += header[i].second;
     // 写入
-    _writeInfo2Hard();
+    table._writeInfo2Hard();
 }
 
 bool Table::_preAccess(int page)
@@ -114,13 +113,12 @@ bool Table::_preAccess(int page)
     {
         if (hardPages.size() <= page)
         {
-            hardPages.insert(hardPages.end(), page - hardPages.size() + 1, NULL);
+            int eld = hardPages.size() - 1;
+            hardPages.insert(hardPages.end(), page - eld, NULL);
+            bufPageIndex.insert(bufPageIndex.end(), page - eld, 0);
         }
-        if (hardPages[page] == NULL)
-        {
-            int tmp;
-            hardPages[page] = (char*) bufPageManager.getPage(FileID, page, tmp);
-        }
+        hardPages[page] = (char*) bufPageManager.getPage(FileID,
+                page, bufPageIndex[page]);
     } else
         return memPages.find(page) != memPages.end();
     return true;
@@ -131,19 +129,25 @@ char* Table::getChars(int page, int offset, int size)
     if (offset + size > PAGE_SIZE) return NULL;
     if (!_preAccess(page)) return NULL;
     char *buf;
-    if (page >= 0) buf = hardPages[page];
+    if (page >= 0) 
+    {
+        buf = hardPages[page];
+        bufPageManager.access(bufPageIndex[page]);
+    }
     else buf = memPages[page];
     return buf + offset;
 }
 
 bool setChars(int page, int offset, char *buf, int size)
 {
+    if (size <= 0) return false;
     char *ref;
     if (page >= 0) 
     {
         if (offset + size > PAGE_SIZE) return false;
         _preAccess(page);
         ref = hardPages[page];
+        bufPageManager.markDirty(bufPageIndex[page]);
     }
     else 
     {
