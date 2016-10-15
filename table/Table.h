@@ -207,7 +207,8 @@ bool Table::open(string path) {
     //into memory
     fileManager.openFile(path.c_str(), FileID);
     char* offset = getChars(0, 0, PAGE_SIZE);
-
+    __RID__ = *(reinterpret_cast<int*>(offset));
+    offset += sizeof(int);
     recordLength = *(reinterpret_cast<int*>(offset));
     offset += sizeof(int);
     numOfColumns = *(reinterpret_cast<int*>(offset));
