@@ -9,6 +9,7 @@
 #include <utility>
 #include <string>
 #include <cstring>
+#include <vector>
 #include <list>
 #include <stdio.h>
 #define PAGE_SIZE 8192
@@ -25,7 +26,7 @@ public:
     Record insertRecord(Record record);
     bool deleteRecord(Record record);
     bool updateRecord(Record real, Record dummy);
-    list<Record> selectRecord(Record cond);
+    pair<bool,Record> selectRecord(Record cond);
 
 	TableHeader th;
 private:
@@ -46,8 +47,11 @@ private:
     int memPageTop;
 	int FileID;
     // 第一页,表信息，内存备份
+    int __RID__; // R!I!D!
     int recordLength, numOfColumns, recordNumber, pageNumber;
     vector<int> recordNumOfPage, availOfPage;
+
+    static int check[256];
 };
 
 void Table::_writeInfo2Hard() // 将第一页信息写入文件系统
@@ -55,7 +59,9 @@ void Table::_writeInfo2Hard() // 将第一页信息写入文件系统
     char* buf = new char[PAGE_SIZE];
     int offset = 0;
     // 写入缓存
-    memcpy(buf, &recordLength, sizeof(int)); // 记录长度
+    memcpy(buf + offset, &__RID__, sizeof(int)); // R!I!D!
+    offset += sizeof(int);
+    memcpy(buf + offset, &recordLength, sizeof(int)); // 记录长度
     offset += sizeof(int);
     memcpy(buf + offset, &numOfColumns, sizeof(int)); // 列数
     offset += sizeof(int);
@@ -92,8 +98,6 @@ pair<bool, Table> Table::createFile(TableHeader header, string path)
     if (!fileManager.createFile(path.c_str())) return make_pair(false, table);
     table.th = header;
     if (!table.open(path)) return make_pair(false, table);
-    int offset = 0;
-    int tmp = 0;
     // 计算信息
     table.recordLength = 0;
     table.numOfColumns = header.getSize();
@@ -240,6 +244,68 @@ bool Table::open(string path) {
 
 }
 
+pair<bool,Record> Table::insertRecord(Record record){
+    if(record.page>=0)
+        return make_pair(false,null);
+    char* buf = getChars(record.page,record.offset,recordLength);
+    recordNumber++;
+    int insertPage = -1;
+    for(int i = 1; i < pageNumber; i++){
+        if(availOfPage[i]>=0){
+            insertPage = i;
+            break;
+        }
+    }
+    int recordLimit = (PAGE_SIZE<<3) / ( (recordLength<<3) + 1);
+    int byteLength = (recordLimit+7) / 8;
+    if(insertPage==-1){
+        insertPage = pageNumber;
+        pageNumber++;
+        recordNumber.push_back(1);
+        availOfPage.push_back(1);
+        char* buffer = new char[byteLength];
+        memset(buffer,0,sizeof(char)*byteLength);
+        memset(buffer+byteLength-1, 0x01 , 1);
+        setChars(insertPage,PAGE_SIZE-byteLength,byteLength);
+        setChars(insertPage,0,buf,recordLength);
+        //Record rec(this,false,insertPage,0);
+        return make_pair(true, Record(this, false, insertPage, 0));
+    }
+    else{
+        int offset = availOfPage[insertPage]*recordLength;
+        setChars(insertPage,offset,buf,recordLength);
+        Record rec(this,false,insertPage,offset); 
+
+        recordNumber[insertPage]++;
+        int byteIndex = (availOfPage[insertPage])/8+1;// 位数组从下标0开始
+        int bitIndex = availOfPage[insertPage]%8;
+        byte theByte = (1 << bitIndex);
+        char* oldByte = getChars(insertPage,PAGE_SIZE-byteIndex,1);
+        byte old = (byte)*oldByte;
+        byte newByte = theByte | old;
+        char* buffer = new char[1];
+        memset(buffer,&newByte,1);
+        setChars(insertPage,PAGE_SIZE-byteIndex,buffer,1);
+        if(recordNumber[insertPage]==recordLimit){
+            availOfPage[insertPage] = -1;
+        }
+        else{
+            buffer = getChars(insertPage,PAGE_SIZE-byteLength,byteLength);
+            int i,y;
+            for(i = 0; i < byteLength; i++){
+                byte x;
+                memcpy(&x,buffer+byteLength-i-1,sizeof(byte));
+                int yy = (x+1)&(~x)
+                if(yy>0){
+                    y = check[yy - 1];
+                    break;
+                }
+            }
+            availOfPage[insertPage] = i*8 + y-1;
+        }
+        return make_pair(true,rec);
+    }
+}
 
 
 bool Table::updateRecord(Record real, Record dummy) {
@@ -248,7 +314,25 @@ bool Table::updateRecord(Record real, Record dummy) {
         return setChars(real.page, real.offset, res, recordLength);
     } else
         return false;
+}
 
+pair<bool,Record> Table::selectRecord(Record cond)
+{
+    if (cond.page >= 0) return make_pair(false, Record(this,false));
+    int len = ((recordLength << 3) + 1) >> 16; // ((1<<13)=8192)*8 bits
+    for (int p = 1; p < pageNumber; ++p)
+        if (recordNumOfPage[p] > 0)
+        {
+            char *buf = getChars()
+            for (int index = 0, row = 0, col = 0; index < len; ++index, ++col)
+            {
+                if (col == 8) 
+                {
+                    ++ row;
+                    col = 0;
+                }
+            }
+        }
 }
 
 #endif

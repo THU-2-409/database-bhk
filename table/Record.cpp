@@ -5,7 +5,7 @@
 #include "Record.h"
 
 Record::Record(Table* _table, bool img ,int _page, int _offset) {
-    if(img)
+    if(!img)
         page = _page;
     else
         page = table->newMemPage();
