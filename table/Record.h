@@ -24,7 +24,7 @@ public:
     bool setInt(string, int);
     bool setString(string, string);
 
-    Record(Table* _table, bool img, int _page = -1, int _offset = -1);
+    Record(Table* _table, bool img, int _page = -1, int _offset = 0);
     ~Record();
 };
 

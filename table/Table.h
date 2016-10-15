@@ -162,10 +162,40 @@ bool setChars(int page, int offset, char *buf, int size)
             ref = memPages[page];
     }
     memcpy(ref + offset, buf, size);
+    return true;
 }
 
 int Table::deleteFile(string path){
 	return remove(path);
+}
+
+int Table::newMemPage()
+{
+    return ++ memPageTop;
+}
+void releaseMemPage(int page)
+{
+    if (page < 0 && memPages.find(page) != memPages.end())
+    {
+        delete[] memPages[page];
+        memPages.erase(memPages.find(page));
+    }
+}
+
+bool Table::deleteRecord(Record record)
+{
+    if (record.page < 0) return false;
+    int index = record.offset / recordLength;
+    int row = index >> 3;
+    int col = index & 7;
+    char *bitB = getChars(record.page, PAGE_SIZE - row - 1, 1);
+    if ((*bitB & (1 << col)) == 0) return false; // 0 未使用，小端存储
+    char tmp = *bitB;
+    tmp ^= (1 << col);
+    -- recordNumOfPage[record.page];
+    if (availOfPage[record.page] == -1)
+        availOfPage[record.page] = index;
+    return setChars(record.page, PAGE_SIZE - row - 1, &tmp, 1);
 }
 
 bool Table::open(string path) {
@@ -204,6 +234,10 @@ bool Table::open(string path) {
         availOfPage[i] = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
         offset += sizeof(int);
     }
+
+
+    for(int i = 0; i < 9; ++ i)
+        check[1 << i - 1] = i;
 }
 
 pair<bool,Record> Table::insertRecord(Record record){
@@ -267,6 +301,16 @@ pair<bool,Record> Table::insertRecord(Record record){
         }
         return make_pair(true,rec);
     }
+}
+
+
+bool Table::updateRecord(Record real, Record dummy) {
+    if(dummy.page < 0 && real.page >= 0) {
+        char *res = getChars(dummy.page, dummy.offset, recordLength);
+        return setChars(real.page, real.offset, res, recordLength);
+    } else
+        return false;
+
 }
 
 #endif
