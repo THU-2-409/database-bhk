@@ -13,7 +13,9 @@ typedef vector< PAIR > PAIRVECTOR;
 
 class TableHeader{
 	PAIRVECTOR thVector;
+
 public:
+    friend class Table;
 	TableHeader(PAIRVECTOR rawVector){
 		PAIR ridPair("#rid",4);
 		thVector.push_back(ridPair);
