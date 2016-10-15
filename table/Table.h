@@ -16,7 +16,7 @@ class Table {
 	TableHeader th;
 	int FileID;
 public:
-    Table() {}
+    Table():memPageTop(0) {}
     friend class Record;
     static pair<bool, Table> createFile(TableHeader header, string path);
     static int deleteFile(string path);
@@ -29,8 +29,12 @@ public:
 private:
     char* getChars(int page, int offset, int size);
     bool setChars(int page, int offset, char* buf, int size);
+    int newMemPage();
+    void releaseMemPage(int page);
 
     FileManager fileManager;
+    map<int,char*> memPages;
+    int memPageTop;
 };
 
 pair<bool, Table> Table::createFile(TableHeader header, string path) 
