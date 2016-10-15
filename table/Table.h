@@ -27,8 +27,8 @@ public:
     bool updateRecord(Record real, Record dummy);
     list<Record> selectRecord(Record cond);
 private:
-    BufType getBuf(int page, int offset, int size);
-    bool setBuf(int page, int offset, BufType buf, int size);
+    char* getChars(int page, int offset, int size);
+    bool setChars(int page, int offset, char* buf, int size);
 
     FileManager fileManager;
 };
@@ -37,7 +37,11 @@ pair<bool, Table> Table::createFile(TableHeader header, string path)
 {
     Table table;
     if (!fileManager.createFile(path.c_str())) return make_pair(false, table);
-    //table.
+    table.th = header;
+    if (!table.open(path)) return make_pair(false, table);
+    int offset = 0;
+    int tmp = 0;
+    for (int )
 }
 
 int Table::deleteFile(string path){
