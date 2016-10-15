@@ -13,7 +13,7 @@ class Record {
     int page;
     union {
         int offset;
-        BufType* address;
+        char* address;
     };
     Table* table;
     friend class Table;
