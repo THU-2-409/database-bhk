@@ -99,6 +99,7 @@ pair<bool, Table> Table::createFile(TableHeader header, string path)
     table.th = header;
     if (!table.open(path)) return make_pair(false, table);
     // 计算信息
+    table.__RID__ = 0;
     table.recordLength = 0;
     table.numOfColumns = header.getSize();
     table.recordNumber = 0;
@@ -307,7 +308,7 @@ pair<bool,Record> Table::insertRecord(Record record){
 
 
 bool Table::updateRecord(Record real, Record dummy) {
-    if(dummy.page < 0 && real.page >= 0) {
+    if(dummy.page < 0 && real.page >= 0 && dummy.offset == 0) {
         char *res = getChars(dummy.page, dummy.offset, recordLength);
         return setChars(real.page, real.offset, res, recordLength);
     } else
@@ -316,12 +317,14 @@ bool Table::updateRecord(Record real, Record dummy) {
 
 pair<bool,Record> Table::selectRecord(Record cond)
 {
-    if (cond.page >= 0) return make_pair(false, Record(this,false));
+    if (cond.page >= 0 || cond.offset != 0) 
+        return make_pair(false, Record(this,true));
     int len = ((recordLength << 3) + 1) >> 16; // ((1<<13)=8192)*8 bits
+    char *ref = getChars(cond.page, cond.offset, recordLength);
     for (int p = 1; p < pageNumber; ++p)
         if (recordNumOfPage[p] > 0)
         {
-            char *buf = getChars()
+            char *buf = getChars(p, 0, PAGE_SIZE);
             for (int index = 0, row = 0, col = 0; index < len; ++index, ++col)
             {
                 if (col == 8) 
@@ -329,8 +332,23 @@ pair<bool,Record> Table::selectRecord(Record cond)
                     ++ row;
                     col = 0;
                 }
+                if ((1 << col) & buf[PAGE_SIZE - row - 1])
+                {
+                    bool flag = true;
+                    for (int i = 0, offset = index * recordLength;
+                            i < th.getSize() && flag;
+                            offset += th[i++].second)
+                        if (th[i].first.at(0) != '#')
+                        {
+                            flag = memcmp(ref, buf + offset, th[i].second);
+                        }
+                    if (flag)
+                        return make_pair(true,
+                                Record(this, false, p, index * recordLength));
+                }
             }
         }
+    return make_pair(false, Record(this, true));
 }
 
 #endif
