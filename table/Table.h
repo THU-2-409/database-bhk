@@ -196,5 +196,43 @@ bool Table::deleteRecord(Record record)
     return setChars(record.page, PAGE_SIZE - row - 1, &tmp, 1);
 }
 
+bool Table::open(string path) {
+    //read:
+    //int recordLength, numOfColumns, recordNumber, pageNumber;
+    //vector<int> recordNumOfPage, availOfPage;
+    //into memory
+    fileManager.openFile(path.c_str(), FileID);
+    int offset = 0;
+    recordLength = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+    offset += sizeof(int);
+    numOfColumns = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+    offset += sizeof(int);
+
+    PAIR* tem = new PAIR[numOfColumns];
+    for(int i = 0; i < numOfColumns; ++ i){//读出每一个表项的长度
+        tem[i].second = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+        offset += sizeof(int);
+    }
+    for(int i = 0; i < numOfColumns; ++ i){//读出每个表项的名称
+        int temLen = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+        offset += sizeof(int);//读出表项名称的长度
+        tem[i].first = getChars(0, offset, temLen);
+        offset += temLen;
+    }
+    PAIRVECTOR pairvector(tem, tem + numOfColumns);
+    th.thVector = pairvector;
+
+    recordNumber = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+    offset += sizeof(int);
+    pageNumber = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+    offset += sizeof(int);
+    for(int i = 0; i < pageNumber; ++ i){
+        recordNumOfPage[i] = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+        offset += sizeof(int);
+        availOfPage[i] = *(reinterpret_cast<int*>(getChars(0, offset, sizeof(int))));
+        offset += sizeof(int);
+    }
+}
+
 #endif
 // vim: ts=4
