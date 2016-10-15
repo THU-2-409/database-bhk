@@ -13,7 +13,7 @@
 using namespace std;
 
 class Table {
-	TableHeader* th;
+	TableHeader th;
 	int FileID;
 public:
     Table() {}
@@ -37,7 +37,9 @@ pair<bool, Table> Table::createFile(TableHeader header, string path)
 {
     Table table;
     if (!fileManager.createFile(path.c_str())) return make_pair(false, table);
-    //table.
+    table.th = header;
+    if (!table.open(path)) return make_pair(false, table);
+    int offset = 0;
 }
 
 int Table::deleteFile(string path){
