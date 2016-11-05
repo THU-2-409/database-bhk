@@ -12,12 +12,17 @@
 #include <vector>
 #include <list>
 #include <stdio.h>
+#include <assert>
 #define PAGE_SIZE 8192
 #define B_TREE_NODE_SIZE 100
 using namespace std;
 
 struct IndexNodePointer {
     int page, offset;
+    IndexNodePointer(int p = -1, int o = -1){
+        page = p;
+        offset = o;
+    }
 };
 
 class Index {
@@ -28,7 +33,8 @@ public:
     bool open(string path);
     int close();
 
-    void insert(char *value, int page, int offset);
+    IndexNodePointer findByKey(char* key, list<IndexNodePointer>* stackRecoder = NULL);
+    IndexNodePointer deleteByKey(char* key);
 private:
     // Index的信息
     int keySize, treeDepth, nodeSize;
@@ -39,207 +45,12 @@ private:
     int FileID;
 
     void _writeInfo2Hard();
-    char* getChars(int page, int offset, int size);
+    char* getChars(int page, int offset, int size = 0);
     bool setChars(int page, int offset, char *buf, int size);
 
-    void _insertDeep(list<IndexNodePointer> &stack, char *value, int page, int offset);
-    void _repairToTop(list<IndexNodePointer> &stack);
-    void _insert2NodeArray(IndexNodePointer r, char *val)
-    IndexNodePointer _findNodeArray4P(IndexNodePointer r, IndexNodePointer val)
-    IndexNodePointer _allocBNode();
-    int _compare(char *a, char *b);
+    IndexNodePointer _findByKey(char* key, char* node, int depth, list<IndexNodePointer>* stackRecoder = NULL);
+    void mergeNode(list<IndexNodePointer> stackRecoder);
 };
-
-int Index:: _compare(char *a, char *b)
-{
-    if (keySize != 4)
-    {
-        for (int i = 0; i < keySize; ++i)
-        {
-            if (*a != *b) return *a < *b ? -1 : 1;
-            ++a;
-            ++b;
-        }
-    }
-    else 
-    {
-        int i = *((int*)a), j = *((int*)b);
-        if (i != j) return i < j ? -1 : 1;
-    }
-    return 0;
-}
-
-void Index:: insert(char *value, int page, int offset)
-{
-    list<IndexNodePointer> stack;
-    IndexNodePointer p;
-    p.page = 1;
-    p.offset = 0;
-    stack.push_back(p);
-    _insertDeep(stack, value, page, offset);
-}
-
-void Index:: _insert2NodeArray(IndexNodePointer r, char *val)
-{
-    char *tmp = new char[keySize + 8];
-    memcpy(tmp, val, keySize + 8);
-    char *leave = new char[nodeSize];
-    char *pleave = this.getChars(r.page, r.offset, nodeSize);
-    int l_offset = 0;
-    for (int i = 0; i < B_TREE_NODE_SIZE; ++i)
-    {
-        int *pPage = (int*)(pleave + keySize);
-        if (*pPage == -1)
-        {
-            // 数组的结束
-            memcpy(leave + l_offset, tmp, keySize + 8);
-            l_offset += keySize + 8;
-            memset(leave + l_offset + keySize, -1, sizeof(int));
-            l_offset += keySize + 8;
-            break;
-        }
-        int cmp = _compare(tmp, pleave);
-        if (cmp < 0)
-        {
-            memcpy(leave + l_offset, tmp, keySize + 8);
-            l_offset += keySize + 8;
-            memcpy(tmp, pleave, keySize + 8);
-        }
-        else 
-        {
-            memcpy(leave + l_offset, pleave, keySize + 8);
-            l_offset += keySize + 8;
-        }
-        pleave += keySize + 8;
-    }
-    this.setChars(r.page, r.offset, leave, l_offset);
-}
-
-void Index:: _insertDeep(list<IndexNodePointer> &stack, char *value, int page, int offset)
-{
-    IndexNodePointer r = stack.back();
-    if (stack.size() > this.treeDepth)
-    {
-        // 叶结点
-        char *tmp = new char[keySize + 8];
-        memcpy(tmp, value, keySize);
-        memcpy(tmp + keySize, &page, sizoef(int));
-        memcpy(tmp + keySize + 4, &offset, sizoef(int));
-        _insert2NodeArray(r, tmp);
-        _repairToTop(stack);
-    }
-    else
-    {
-        // 找到刚好大于左边的位置
-        char *pleave = this.getChars(r.page, r.offset, nodeSize);
-        for (int i = 0; i < B_TREE_NODE_SIZE; ++i)
-        {
-            int *pPage = (int*)(pleave + keySize * 2 + 8);
-            if (*pPage == -1)
-            {
-                IndexNodePointer p;
-                pPage = (int*)(pleave + keySize);
-                p.page = pPage[0];
-                p.offset = pPage[1];
-                stack.push(p);
-                _insertDeep(stack, value, page, offset);
-                return ;
-            }
-            int cmp = _compare(value, pleave + keySize + 8);
-            if (cmp >= 0)
-            {
-                IndexNodePointer p;
-                pPage = (int*)(pleave + keySize);
-                p.page = pPage[0];
-                p.offset = pPage[1];
-                stack.push(p);
-                _insertDeep(stack, value, page, offset);
-                return ;
-            }
-        }
-    }
-}
-
-IndexNodePointer Index:: _findNodeArray4P(IndexNodePointer r, IndexNodePointer val)
-{
-    char *pnode = getChars(r.page, r.offset, nodeSize);
-    for (int i = 0; i < B_TREE_NODE_SIZE; ++i)
-    {
-        int *pPage = (int*)(pnode + keySize);
-        int *pOfs = (int*)(pnode + keySize + 4);
-        if (*pPage == -1) break;
-        if (*pPage == val.page && *pOfs == val.offset) return pnode;
-        pnode += keySize + 8;
-    }
-    r.page = -1;
-    return r;
-}
-
-void Index:: _repairToTop(list<IndexNodePointer> stack)
-{
-    for (; ;)
-    {
-        if (r.size <= 0) break;
-        IndexNodePointer r = stack.back();
-        stack.pop_back();
-        // 是否爆满
-        int flag = true;
-        char *pnode = this.getChars(r.page, r.offset, nodeSize);
-        for (int i = 0; i < B_TREE_NODE_SIZE; ++i)
-        {
-            int *pPage = (int*)(pnode + keySize);
-            if (*pPage == -1)
-            {
-                flag = false;
-                break;
-            }
-        }
-        if (!flag) return ;
-        // 分裂
-        IndexNodePointer p1 = _allocBNode();
-        IndexNodePointer p2 = _allocBNode();
-        char *pnode = this.getChars(r.page, r.offset, nodeSize);
-        int ofs1 = 0, ofs2 = 0;
-        IndexNodePointer tmpNP;
-        memcpy(&tmpNP, pnode + keySize, sizeof(IndexNodePointer));
-        for (int i = 0; i < B_TREE_NODE_SIZE; ++i)
-        {
-            if (i + i < B_TREE_NODE_SIZE)
-            {
-                setChars(p1.page, p1.offset + ofs1, pnode, keySize + 8);
-                ofs1 += keySize + 8;
-            }
-            else
-            {
-                setChars(p2.page, p2.offset + ofs2, pnode, keySize + 8);
-                ofs2 += keySize + 8;
-            }
-            pnode += keySize + 8;
-        }
-        int tmp = -1;
-        setChars(p1.page, p1.offset + ofs1 + keySize, &tmp, sizeof(int));
-        setChars(p2.page, p2.offset + ofs2 + keySize, &tmp, sizeof(int));
-        // 修改父亲
-        if (stack.size() > 0)
-        {
-            // 现在不是根
-            IndexNodePointer pp = _findNodeArray4P(stack.back(), tmpNP);
-            setChars(pp.page, pp.offset + keySize, &p1, sizeof(IndexNodePointer));
-            _insert2NodeArray(stack.back(), getChars(p2.page, p2.offset, nodeSize));
-        }
-        else 
-        {
-            // 分裂根结点
-            int offset = 0;
-            setChars(1, offset, getChars(p1.page, p1.offset, nodeSize), keySize + 8);
-            offset += keySize + 8;
-            setChars(1, offset, getChars(p2.page, p2.offset, nodeSize), keySize + 8);
-            offset += keySize + 8;
-            setChars(1, offset + keySize, &tmp, sizeof(int));
-            return ;
-        }
-    }
-}
 
 int Index:: close() 
 {
@@ -263,9 +74,13 @@ pair<bool, Index> Index::createFile(Table table, string key, int keySize, string
     Index.nodeSize = (keySize + 8) * B_TREE_NODE_SIZE;
     // 写入
     Index._writeInfo2Hard();
-    // 创建B树根节点
-    int page = -1;
-    Index.setChars(1, keySize, &page, sizeof(int));
+
+    char *buf = new char[keySize+8];
+    int offset = keySize;
+    memcpy(buf + offset, -1, sizeof(int)); // B树的深度
+    offset += sizeof(int);
+    offset += sizeof(int);
+    this.setChars(0, 0, buf, offset);
 }
 
 void Index:: _writeInfo2Hard()
@@ -327,6 +142,139 @@ bool Index:: open(string path)
     offset += sizeof(emptyListHead);
 
     return true;
+}
+
+IndexNodePointer Index::findByKey(char* key, list<IndexNodePointer>* stackRecoder)
+{
+    char *node = this.getChars(1,0,PAGE_SIZE);
+    if(stackRecoder != NULL){
+        assert(stackRecoder.size() == 0;)
+        stackRecoder.push_back(IndexNodePointer(1, 0));
+    }
+    return _findByKey(key,node,0, stackRecoder);
+}
+
+IndexNodePointer Index::_findByKey(char* key, char* node,int depth,list<IndexNodePointer>* stackRecoder)
+{
+    int page = *(int*)(node+keySize);
+    int count = 0;
+    char* currentKey;
+    IndexNodePointer tmp;
+    while(page!=-1 && count < 100)
+    {
+        char* currentKey = node + count * (keySize + 8);
+        int ret = _compare(key,currentKey);
+        if(ret==1)
+        {
+            page = *(int*)(currentKey+keySize);
+            count++;
+            continue;
+        }
+        else if(ret==0)
+        {
+            if(treeDepth==depth)
+            {
+                stackRecoder -> back().offset += count * (keySize + 8);
+                return *(IndexNodePointer*)(currentKey+keySize);
+            }
+            else
+            {
+                int offset = *(int*)(currentKey + keySize + 4);
+                if(stackRecoder != NULL){
+                    stackRecoder -> back().offset += count * (keySize + 8);
+                    stackRecoder->push_back(IndexNodePointer(page, offset));
+                }
+                return _findByKey(key, this.getChars(page,offset,depth+1));    
+            }
+        }
+        else
+        {
+            if(count==0)
+            {
+                return tmp;
+            }
+            else
+            {
+                page = *(int*)(currentKey-8);
+                int offset = *(int*)(currentKey -4);
+                if(stackRecoder != NULL){
+                    stackRecoder -> back().offset += (count - 1) * (keySize + 8);
+                    stackRecoder->push_back(IndexNodePointer(page, offset));
+                }
+                return _findByKey(key,offset,depth+1);
+            }  
+        }
+    }
+    return tmp;
+}
+
+
+
+IndexNodePointer Index::deleteByKey(char* key)
+{
+    list<IndexNodePointer> stackRecoder;
+    IndexNodePointer res = findByKey(key, stackRecoder);
+    if(res.page == -1)
+        return IndexNodePointer();
+    int page = stackRecoder.back().page;
+    int offset = stackRecoder.back().offset;
+    int lengthafter = keySize + 8;
+    char* nextPageNum = getChars(page, offset + 2 * keySize + 8, 0);
+    while(*(int*)nextPageNum != -1){
+        lengthafter += keySize + 8;
+        nextPageNum += keySize + 8;
+    }
+    setChars(page, offset, getChars(page, offset + keySize + 8, lengthafter), lengthafter);
+    mergeNode(stackRecoder);
+}
+void Index::mergeNode(list<IndexNodePointer> stackRecoder){
+    int page = stackRecoder.back().page;
+    int offset = stackRecoder.back().offset;
+    int num = 1;
+    char* nextPageNum = getChars(page, offset + keySize, 0);
+    while(*(int*)nextPageNum != -1){
+        num += 1;
+        nextPageNum += keySize + 8;
+    }
+    num += (offset % nodeSize) / (keySize + 8);
+    if(num >= B_TREE_NODE_SIZE / 2)
+        return;
+    stackRecoder.pop_back();
+    char* father = getChars(stackRecoder.back().page, stackRecoder.back().offset, 0);
+    if(*(int*)(father + 2* keySize + 8) != -1){
+        char* rightNb = getChars(*(int*)(father + 2* keySize + 8), *(int*)(father + 2 * 
+            keySize + 12), 0);
+        // judge num
+        int count = 1;// page = -1 contained
+        char* pageNum = rightNb + keySize;
+        while(*(int*)pageNum != -1){
+            count += 1;
+            pageNum += keySize + 8;
+        }
+        if(count > nodeSize / 2){
+            //
+            moveFromRight();
+        }
+        else
+            combine();
+    }
+    else{
+         char* leftNb = getChars(*(int*)(father - 8), *(int*)(father - 4), 0);
+        // judge num
+        int count = 1;// page = -1 contained
+        char* pageNum = leftNb + keySize;
+        while(*(int*)pageNum != -1){
+            count += 1;
+            pageNum += keySize + 8;
+        }
+        if(count > nodeSize / 2){
+            //
+            moveFromLeft();
+        }
+        else
+            combine();       
+    }
+
 }
 
 
