@@ -236,6 +236,7 @@ void Index:: _repairToTop(list<IndexNodePointer> stack)
             setChars(1, offset, getChars(p2.page, p2.offset, nodeSize), keySize + 8);
             offset += keySize + 8;
             setChars(1, offset + keySize, &tmp, sizeof(int));
+            this.treeDepth ++;
             return ;
         }
     }
