@@ -12,12 +12,17 @@
 #include <vector>
 #include <list>
 #include <stdio.h>
+#include <assert>
 #define PAGE_SIZE 8192
 #define B_TREE_NODE_SIZE 100
 using namespace std;
 
 struct IndexNodePointer {
     int page, offset;
+    IndexNodePointer(int p = -1, int o = -1){
+        page = p;
+        offset = o;
+    }
 };
 
 class Index {
@@ -27,6 +32,9 @@ public:
     static int deleteFile(string path);
     bool open(string path);
     int close();
+
+    IndexNodePointer findByKey(char* key, list<IndexNodePointer>* stackRecoder = NULL);
+    IndexNodePointer deleteByKey(char* key);
 private:
     // Index的信息
     int keySize, treeDepth, nodeSize;
@@ -39,6 +47,9 @@ private:
     void _writeInfo2Hard();
     char* getChars(int page, int offset, int size);
     bool setChars(int page, int offset, char *buf, int size);
+
+    IndexNodePointer _findByKey(char* key, char* node, int depth, list<IndexNodePointer>* stackRecoder = NULL);
+
 };
 
 int Index:: close() 
@@ -63,6 +74,13 @@ pair<bool, Index> Index::createFile(Table table, string key, int keySize, string
     Index.nodeSize = (keySize + 8) * B_TREE_NODE_SIZE;
     // 写入
     Index._writeInfo2Hard();
+
+    char *buf = new char[keySize+8];
+    int offset = keySize;
+    memcpy(buf + offset, -1, sizeof(int)); // B树的深度
+    offset += sizeof(int);
+    offset += sizeof(int);
+    this.setChars(0, 0, buf, offset);
 }
 
 void Index:: _writeInfo2Hard()
@@ -126,5 +144,79 @@ bool Index:: open(string path)
     return true;
 }
 
+IndexNodePointer Index::findByKey(char* key, list<IndexNodePointer>* stackRecoder)
+{
+    char *node = this.getChars(1,0,PAGE_SIZE);
+    if(stackRecoder != NULL){
+        assert(stackRecoder.size() == 0;)
+        stackRecoder.push_back(IndexNodePointer(1, 0));
+    }
+    return _findByKey(key,node,0, stackRecoder);
+}
+
+IndexNodePointer Index::_findByKey(char* key, char* node,int depth,list<IndexNodePointer>* stackRecoder)
+{
+    int page = *(int*)(node+keySize);
+    int count = 0;
+    char* currentKey;
+    IndexNodePointer tmp;
+    while(page!=-1 && count < 100)
+    {
+        char* currentKey = node + count * (keySize + 8);
+        int ret = _compare(key,currentKey);
+        if(ret==1)
+        {
+            page = *(int*)(currentKey+keySize);
+            count++;
+            continue;
+        }
+        else if(ret==0)
+        {
+            if(treeDepth==depth)
+            {
+                stackRecoder -> back().offset += count * (keySize + 8);
+                return *(IndexNodePointer*)(currentKey+keySize);
+            }
+            else
+            {
+                int offset = *(int*)(currentKey + keySize + 4);
+                if(stackRecoder != NULL){
+                    stackRecoder -> back().offset += count * (keySize + 8);
+                    stackRecoder->push_back(IndexNodePointer(page, offset));
+                }
+                return _findByKey(key, this.getChars(page,offset,depth+1));    
+            }
+        }
+        else
+        {
+            if(count==0)
+            {
+                return tmp;
+            }
+            else
+            {
+                page = *(int*)(currentKey-8);
+                int offset = *(int*)(currentKey -4);
+                if(stackRecoder != NULL){
+                    stackRecoder -> back().offset += (count - 1) * (keySize + 8);
+                    stackRecoder->push_back(IndexNodePointer(page, offset));
+                }
+                return _findByKey(key,offset,depth+1);
+            }  
+        }
+    }
+    return tmp;
+}
+
+
+
+IndexNodePointer Index::deleteByKey(char* key)
+{
+    list<IndexNodePointer> stackRecoder;
+    IndexNodePointer res = findByKey(key, stackRecoder);
+    if(res.page == -1)
+        return IndexNodePointer();
+
+}
 
 #endif
