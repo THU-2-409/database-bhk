@@ -22,13 +22,15 @@ public:
     static pair<bool, Table> createFile(TableHeader header, string path);
     static int deleteFile(string path);
     bool open(string path);
-    bool close();
+    int close();
     Record insertRecord(Record record);
     bool deleteRecord(Record record);
     bool updateRecord(Record real, Record dummy);
     pair<bool,Record> selectRecord(Record cond);
 
-	TableHeader th;
+    void createIndex(string key, string path); // TODO!!!
+
+    TableHeader th;
 private:
     char* getChars(int page, int offset, int size);
     bool setChars(int page, int offset, char* buf, int size);
@@ -45,7 +47,7 @@ private:
     vector<char*> hardPages;
     vector<int> bufPageIndex;
     int memPageTop;
-	int FileID;
+    int FileID;
     // 第一页,表信息，内存备份
     int __RID__; // R!I!D!
     int recordLength, numOfColumns, recordNumber, pageNumber;
@@ -53,6 +55,12 @@ private:
 
     static int check[256];
 };
+
+int Table::close()
+{
+    bufPageManager.close();
+    return fileManager.closeFile(FileID);
+}
 
 void Table::_writeInfo2Hard() // 将第一页信息写入文件系统
 {
@@ -89,15 +97,15 @@ void Table::_writeInfo2Hard() // 将第一页信息写入文件系统
     }
 
     // 写入文件系统
-    table.setChars(0, 0, buf, offset);
+    this.setChars(0, 0, buf, offset);
 }
 
 pair<bool, Table> Table::createFile(TableHeader header, string path) 
 {
     Table table;
     if (!fileManager.createFile(path.c_str())) return make_pair(false, table);
-    table.th = header;
     if (!table.open(path)) return make_pair(false, table);
+    table.th = header;
     // 计算信息
     table.__RID__ = 0;
     table.recordLength = 0;
@@ -169,7 +177,7 @@ bool setChars(int page, int offset, char *buf, int size)
 }
 
 int Table::deleteFile(string path){
-	return remove(path);
+    return remove(path);
 }
 
 int Table::newMemPage()
@@ -206,7 +214,7 @@ bool Table::open(string path) {
     //int recordLength, numOfColumns, recordNumber, pageNumber;
     //vector<int> recordNumOfPage, availOfPage;
     //into memory
-    fileManager.openFile(path.c_str(), FileID);
+    if (!fileManager.openFile(path.c_str(), FileID)) return false;
     char* offset = getChars(0, 0, PAGE_SIZE);
     __RID__ = *(reinterpret_cast<int*>(offset));
     offset += sizeof(int);
@@ -244,6 +252,7 @@ bool Table::open(string path) {
     for(int i = 0; i < 9; ++ i)
         check[1 << i - 1] = i;
 
+    return true;
 }
 
 pair<bool,Record> Table::insertRecord(Record record){
