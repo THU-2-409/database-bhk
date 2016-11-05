@@ -45,11 +45,11 @@ private:
     int FileID;
 
     void _writeInfo2Hard();
-    char* getChars(int page, int offset, int size);
+    char* getChars(int page, int offset, int size = 0);
     bool setChars(int page, int offset, char *buf, int size);
 
     IndexNodePointer _findByKey(char* key, char* node, int depth, list<IndexNodePointer>* stackRecoder = NULL);
-
+    void mergeNode(list<IndexNodePointer> stackRecoder);
 };
 
 int Index:: close() 
@@ -216,7 +216,66 @@ IndexNodePointer Index::deleteByKey(char* key)
     IndexNodePointer res = findByKey(key, stackRecoder);
     if(res.page == -1)
         return IndexNodePointer();
+    int page = stackRecoder.back().page;
+    int offset = stackRecoder.back().offset;
+    int lengthafter = keySize + 8;
+    char* nextPageNum = getChars(page, offset + 2 * keySize + 8, 0);
+    while(*(int*)nextPageNum != -1){
+        lengthafter += keySize + 8;
+        nextPageNum += keySize + 8;
+    }
+    setChars(page, offset, getChars(page, offset + keySize + 8, lengthafter), lengthafter);
+    mergeNode(stackRecoder);
+}
+void Index::mergeNode(list<IndexNodePointer> stackRecoder){
+    int page = stackRecoder.back().page;
+    int offset = stackRecoder.back().offset;
+    int num = 1;
+    char* nextPageNum = getChars(page, offset + keySize, 0);
+    while(*(int*)nextPageNum != -1){
+        num += 1;
+        nextPageNum += keySize + 8;
+    }
+    num += (offset % nodeSize) / (keySize + 8);
+    if(num >= B_TREE_NODE_SIZE / 2)
+        return;
+    stackRecoder.pop_back();
+    char* father = getChars(stackRecoder.back().page, stackRecoder.back().offset, 0);
+    if(*(int*)(father + 2* keySize + 8) != -1){
+        char* rightNb = getChars(*(int*)(father + 2* keySize + 8), *(int*)(father + 2 * 
+            keySize + 12), 0);
+        // judge num
+        int count = 1;// page = -1 contained
+        char* pageNum = rightNb + keySize;
+        while(*(int*)pageNum != -1){
+            count += 1;
+            pageNum += keySize + 8;
+        }
+        if(count > nodeSize / 2){
+            //
+            moveFromRight();
+        }
+        else
+            combine();
+    }
+    else{
+         char* leftNb = getChars(*(int*)(father - 8), *(int*)(father - 4), 0);
+        // judge num
+        int count = 1;// page = -1 contained
+        char* pageNum = leftNb + keySize;
+        while(*(int*)pageNum != -1){
+            count += 1;
+            pageNum += keySize + 8;
+        }
+        if(count > nodeSize / 2){
+            //
+            moveFromLeft();
+        }
+        else
+            combine();       
+    }
 
 }
+
 
 #endif
