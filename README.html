@@ -1,0 +1,236 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<p><link href="/home/fool/Public/mdCSS/avenir-white-my.css" rel="stylesheet" /></p>
+<h1 id="database-bhk">database-bhk</h1>
+<p>数据库大作业</p>
+<h2 id="设计">设计</h2>
+<p><em>字符串存储：</em> <strong>以结尾</strong></p>
+<h3 id="tableheader.h">TableHeader.h</h3>
+<p>应该不需要改</p>
+<h3 id="record.h">Record.h</h3>
+<table>
+<thead>
+<tr class="header">
+<th>接口</th>
+<th>功能</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>pair&lt;bool, int&gt; getInt(string)</code></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>pair&lt;bool, string&gt; getString(string)</code></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><code>bool setInt(string, int, bool)</code></td>
+<td></td>
+<td>布尔参数false时，代表null值</td>
+</tr>
+<tr class="even">
+<td><code>bool setString(string, string, bool)</code></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="table.h">Table.h</h3>
+<table style="width:17%;">
+<colgroup>
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>接口</th>
+<th>功能</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>static pair&lt;bool, Table&gt; createFile(TableHeader header, string path)</code></td>
+<td>创建数据表文件</td>
+<td>记录管理</td>
+</tr>
+<tr class="even">
+<td><code>static int deleteFile(string path)</code></td>
+<td>删除文件</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><code>bool open(string path)</code></td>
+<td>打开文件</td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>int close()</code></td>
+<td>关闭文件</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><code>Record insertRecord(Record)</code></td>
+<td>插入</td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>bool deleteRecord(Record)</code></td>
+<td>删除</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><code>bool updateRecord(Record real, Record dummy)</code></td>
+<td>更新</td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>pair&lt;bool,Record&gt; selectRecord(Record cond)</code></td>
+<td>查询</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><code>void createIndex(string name)</code></td>
+<td>为属性创建索引</td>
+<td>索引模块</td>
+</tr>
+<tr class="even">
+<td><code>void deleteIndex(string name)</code></td>
+<td>删除属性索引</td>
+<td>索引模块</td>
+</tr>
+<tr class="odd">
+<td><code>int openIndex(string name)</code></td>
+<td>打开索引，返回索引的根页</td>
+<td>索引模块</td>
+</tr>
+<tr class="even">
+<td><code>void closeIndex(string name)</code></td>
+<td>关闭索引缓存</td>
+<td>索引模块</td>
+</tr>
+<tr class="odd">
+<td><code>void insertIntoIndex(int page, Record record)</code></td>
+<td>插入记录至索引</td>
+<td>索引模块</td>
+</tr>
+<tr class="even">
+<td><code>void deleteFromIndex(int page, Record record)</code></td>
+<td>删除索引中记录</td>
+<td>索引模块</td>
+</tr>
+<tr class="odd">
+<td><code>Record findFromIndex(int page, Record record)</code></td>
+<td>查询索引中记录</td>
+<td>索引模块</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th>私有方便接口</th>
+<th>功能</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>char* getChars(int page, int offset, int size)</code></td>
+<td>返回读数据指针</td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>bool setChars(int page, int offset, char* buf, int size)</code></td>
+<td>写入数据</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><code>int getInt(int page, int offset)</code></td>
+<td>读整数</td>
+<td></td>
+</tr>
+<tr class="even">
+<td><code>string getString(int page, int offset)</code></td>
+<td>读字符串</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="第一页组织">第一页组织</h4>
+<ol style="list-style-type: decimal">
+<li>表头
+<ol style="list-style-type: decimal">
+<li>属性个数</li>
+<li>每个属性在一个记录中占的存储空间</li>
+<li>每个属性的名字</li>
+<li>每个属性的约束
+<ol style="list-style-type: decimal">
+<li>约束个数</li>
+<li>每个约束
+<ol style="list-style-type: decimal">
+<li>约束类型</li>
+<li>相关值</li>
+</ol></li>
+</ol></li>
+</ol></li>
+<li>数据页链表头</li>
+<li>记录空位链表头</li>
+<li>m个（索引页序号（B树根），第几个属性）</li>
+<li>空页链表头</li>
+<li>[var数据页链表头]</li>
+</ol>
+<h4 id="数据页组织">数据页组织</h4>
+<p>页头next指针</p>
+<h4 id="记录组织">记录组织</h4>
+<p>开始是null位数组，之后依次存储每个属性</p>
+<h4 id="索引页组织">索引页组织</h4>
+<ul>
+<li>普通的非叶结点
+<ul>
+<li><值,指针>键对。</li>
+<li>终结位的指针为-1</li>
+</ul></li>
+<li>叶结点
+<ul>
+<li>记录的拷贝</li>
+<li>页尾offset倒排数组：本页记录按索引属性排序</li>
+<li>offset以short存储</li>
+<li>数组哨兵：-1</li>
+<li>存储量公式(字节)：(页大小-2)/(记录大小+2)</li>
+</ul></li>
+</ul>
+<h4 id="var数据页">[var数据页]</h4>
+<p>页头next指针</p>
+<!--
+第一页：
+总长度 int
+表项数量 n
+n 个 int 每个表项的长度 负号 可变（可变长度的字段在另外的页）
+n个 （表项名称长度byte，名称）
+记录总数
+记录页数
+（每一页的记录个数， 每一页的第一个空位）
+
+每一页
+从页末尾倒序位数组 0 未使用 1 已使用
+
+
+!!! NULL值 !!!
+未实现，每个记录需要一个bit数组来记录NULL
+-->
+</body>
+</html>
