@@ -22,6 +22,12 @@ public:
         buf = new char[size];
         memcpy(buf, src, size);
     }
+    ByteArray(const ByteArray &ori)
+        :size(ori.size)
+    {
+        buf = new char[size];
+        memcpy(buf, ori.buf, size);
+    }
 
     ~ByteArray()
     {

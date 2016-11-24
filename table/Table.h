@@ -16,6 +16,7 @@ using namespace std;
 class TableHeader;
 class HardManager;
 class TableInfo;
+class Trash;
 class Record;
 class RecordData;
 class DataPage;
@@ -44,7 +45,7 @@ public:
     string getName(int col) const { return name.at(col); }
     int getSize(int col) const { return size.at(col); }
     
-    ByteArray* dump();
+    ByteArray dump();
     int load(char*);
 };
 
@@ -81,11 +82,15 @@ public:
     TableHeader header;
     TableInfo(): header("", vector<string>(), vector<int>()) {}
 private:
-    ByteArray* dump();
+    ByteArray dump();
     int load(char*);
 public:
     void loadFrom();
     bool writeBack();
+};
+
+
+class Trash {
 };
 
 
@@ -130,11 +135,11 @@ void TableInfo:: loadFrom()
 bool TableInfo:: writeBack()
 {
     HardManager *hard = HardManager::getInstance();
-    ByteArray* bufa = this->dump();
-    return hard->setChars(0, 0, bufa->c_str(), bufa->getSize());
+    ByteArray bufa = this->dump();
+    return hard->setChars(0, 0, bufa.c_str(), bufa.getSize());
 }
 
-ByteArray* TableHeader:: dump()
+ByteArray TableHeader:: dump()
 {
     char *buf = new char[PAGE_SIZE];
     MemOStream os;
@@ -147,7 +152,7 @@ ByteArray* TableHeader:: dump()
         os.putInt(size[i]);
     }
     // 写完
-    ByteArray *res = new ByteArray(buf, os.length());
+    ByteArray res(buf, os.length());
     delete[] buf;
     return res;
 }
@@ -171,17 +176,16 @@ int TableHeader:: load(char *buf)
     return is.length();
 }
 
-ByteArray* TableInfo:: dump()
+ByteArray TableInfo:: dump()
 {
-    ByteArray* buf0 = header.dump();
+    ByteArray buf0 = header.dump();
     char *buf = new char[PAGE_SIZE];
-    memcpy(buf, buf0->c_str(), buf0->getSize());
+    memcpy(buf, buf0.c_str(), buf0.getSize());
     MemOStream os;
     os.load(buf);
-    os.seek(buf0->getSize());
+    os.seek(buf0.getSize());
     // 写完
-    delete buf0;
-    ByteArray *res = new ByteArray(buf, os.length());
+    ByteArray res(buf, os.length());
     delete[] buf;
     return res;
 }

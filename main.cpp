@@ -5,11 +5,16 @@
 
 using namespace std;
 
-int main()
+ByteArray fun()
 {
     string s("Hello world!");
     ByteArray a(s.c_str(), s.size());
-    cout << a[11] << endl;
-    cout << string("\0hell\0o world!") << endl;
+    return a;
+}
+
+int main()
+{
+    ByteArray b = fun();
+    cout << b[11] << endl;
     return 0;
 }
