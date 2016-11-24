@@ -35,13 +35,13 @@
 |`bool deleteRecord(Record)`|删除||
 |`bool updateRecord(Record real, Record dummy)`|更新||
 |`pair<bool,Record> selectRecord(Record cond)`|查询||
-|`void createIndex(string name)`|为属性创建索引|索引模块|
-|`void deleteIndex(string name)`|删除属性索引|索引模块|
-|`int openIndex(string name)`|打开索引，返回索引的根页|索引模块|
-|`void closeIndex(string name)`|关闭索引缓存|索引模块|
+|`bool createIndex(int fieldID)`|为属性创建索引|索引模块|
+|`bool deleteIndex(int fieldID)`|删除属性索引|索引模块|
+|`int openIndex(int fieldID)`|打开索引，返回索引的根页|索引模块|
+|`bool closeIndex(int fieldID)`|关闭索引缓存|索引模块|
 |`void insertIntoIndex(int page, Record record)`|插入记录至索引|索引模块|
-|`void deleteFromIndex(int page, Record record)`|删除索引中记录|索引模块|
-|`Record findFromIndex(int page, Record record)`|查询索引中记录|索引模块|
+|`bool deleteFromIndex(int page, Record record, int fieldName)`|删除索引中记录|索引模块|
+|`Record findFromIndex(int page, Record record, int fieldName, list<IndexNodePointer>* stackRecoder)`|查询索引中记录|索引模块|
 
 | 私有方便接口 | 功能 | 备注 |
 | --- | --- | --- |
@@ -67,7 +67,7 @@
 5. 空页链表头
 6. [var数据页链表头]
 
-#### 数据页组织
+#### 数据页组织/空页组织
 
 页头next指针
 
