@@ -113,12 +113,16 @@ class VarPage {
 class Table {
 private:
     TableInfo info;
+    string currentSchema;
 public:
     static bool createFile(TableHeader header, string path);
     static int deleteFile(string path);
     bool open(string path);
     int close();
-public:
+
+    bool createTable(string tableName, string schema);
+    int dropTable(string tableName);
+    string showTable(string tableName);
 };
 
 
@@ -300,6 +304,35 @@ int Table::close()
     if (!this->info.writeBack()) return 1;
     HardManager *hard = HardManager::getInstance();
     return hard->close();
+}
+
+bool Table::createTable(string tableName, string schema)
+{
+    currentSchema = schema;
+
+    //根据schema的解析生成TableInfo
+    //根据tableName和database生成path
+    string path = '';
+    
+    return createFile(info.header, path);
+}
+
+int Table::dropTable(string path)
+{
+    //根据tableName和database生成path
+    string path = '';
+
+    return deleteFile(path);
+}
+
+string Table::showTable(string tableName)
+{
+    //根据tableName和database生成path
+    string path = '';
+
+    open(path);
+
+    return currentSchema;
 }
 
 #endif
