@@ -2,7 +2,7 @@
 #include <string.h>  
 #include <string>
 #include "parser_tab.h"  
-extern yyUnionType yylval;  
+extern yyStruType yylval;  
 %}  
 identifier [A-Za-z][_0-9A-Za-z]* 
 int [0-9]+  
@@ -63,16 +63,20 @@ string '[^']*'
 "VARCHAR"	{ return P_VARCHAR; }
 "varchar"	{ return P_VARCHAR; }
 
-{int}		{ sscanf(yytext, "%d", &yylval.val); 
+{int}		{ sscanf(yytext, "%d", &yylval.val);
+		  yylval.type = VALUE_INT; 
 		  return VALUE_INT;
 		}
 
 {string}	{
-		  yylval.str = yytext + 1;
+		  int len = strlen(yytext);
+		  yylval.str = string(yytext).substr(1, len - 2);
+		  yylval.type = VALUE_STRING;
 		  return VALUE_STRING;
 		}
 
-{identifier} { yylval.str = yytext;
+{identifier} { yylval.str = string(yytext);
+		  yylval.type = IDENTIFIER;
 		  return IDENTIFIER;
 		}
 

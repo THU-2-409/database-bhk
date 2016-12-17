@@ -1,10 +1,12 @@
 %{
 #include <stdio.h>
+#include <string>
 #include "lex.yy.c"
-union yyUnionType
+struct yyUnionType
 {
+    int type;
     int val;
-    char * str;
+    string str;
 };
 #define YYSTYPE yyUnionType  
 int yyparse(void);
