@@ -50,3 +50,7 @@ CMakeLists.txt
 
 *.bak
 result/*
+
+/parser/*
+!/parser/parser.l
+!/parser/parser.y
