@@ -2,6 +2,7 @@
 #include "./utils/ByteArray.h"
 #include "./table/Table.h"
 #include <string>
+#include "./parser/func.h"
 
 using namespace std;
 
@@ -16,5 +17,6 @@ int main()
 {
     ByteArray b = fun();
     cout << b[11] << endl;
+    listDirectories();
     return 0;
 }

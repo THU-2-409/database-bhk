@@ -11,6 +11,8 @@
 #include <vector>
 #include <map>
 
+#include "./ColDef.h"
+
 using namespace std;
 
 class TableHeader;
@@ -28,22 +30,22 @@ class TableHeader {
 private:
     string schema;
     map<string, int> dict;
-    vector<string> name;
-    vector<int> size; 
+    vector<ColDef> defs;
 public:
-    TableHeader(string schema, vector<string> names, vector<int> sizes)
-        :schema(schema), size(sizes), name(names)
+    TableHeader(string schema, vector<ColDef> defs)
+        :schema(schema), defs(defs)
     {
-        for (int i = 0; i < names.size(); ++i)
+        for (int i = 0; i < defs.size(); ++i)
         {
-            dict[names[i]] = i;
+            dict[defs[i].name] = i;
         }
     }
 
     string getSchema() const { return this->schema; }
     int getColNums() const { return name.size(); }
-    string getName(int col) const { return name.at(col); }
-    int getSize(int col) const { return size.at(col); }
+    string getName(int col) const { return defs.at(col).name; }
+    int getSize(int col) const { return defs.at(col).size; }
+    int getType(int col) const { return defs.at(col).type; }
     
     ByteArray dump();
     int load(char*);
@@ -113,16 +115,11 @@ class VarPage {
 class Table {
 private:
     TableInfo info;
-    string currentSchema;
 public:
     static bool createFile(TableHeader header, string path);
     static int deleteFile(string path);
     bool open(string path);
     int close();
-
-    bool createTable(string tableName, string schema);
-    int dropTable(string tableName);
-    string showTable(string tableName);
 };
 
 
@@ -149,11 +146,12 @@ ByteArray TableHeader:: dump()
     MemOStream os;
     os.load(buf);
     os.putString(schema);
-    os.putInt(name.size());
-    for (int i = 0; i < name.size(); ++i)
+    os.putInt(defs.size());
+    for (int i = 0; i < defs.size(); ++i)
     {
-        os.putString(name[i]);
-        os.putInt(size[i]);
+        os.putString(getName(i));
+        os.putInt(getSize[i]);
+        os.putInt(getType[i]);
     }
     // 写完
     ByteArray res(buf, os.length());
@@ -168,14 +166,13 @@ int TableHeader:: load(char *buf)
     is.getString(schema);
     int colNums;
     is.getInt(colNums);
-    name.clear();
-    size.clear();
-    name.insert(name.end(), colNums, string());
-    size.insert(size.end(), colNums, 0);
+    defs.clear();
+    name.insert(name.end(), colNums, ColDef());
     for (int i = 0; i < colNums; ++i)
     {
-        is.getString(name[i]);
-        is.getInt(size[i]);
+        is.getString(defs[i].name);
+        is.getInt(defs[i].size);
+        is.getInt(defs[i].type)
     }
     return is.length();
 }
@@ -304,35 +301,6 @@ int Table::close()
     if (!this->info.writeBack()) return 1;
     HardManager *hard = HardManager::getInstance();
     return hard->close();
-}
-
-bool Table::createTable(string tableName, string schema)
-{
-    currentSchema = schema;
-
-    //根据schema的解析生成TableInfo
-    //根据tableName和database生成path
-    string path = '';
-    
-    return createFile(info.header, path);
-}
-
-int Table::dropTable(string path)
-{
-    //根据tableName和database生成path
-    string path = '';
-
-    return deleteFile(path);
-}
-
-string Table::showTable(string tableName)
-{
-    //根据tableName和database生成path
-    string path = '';
-
-    open(path);
-
-    return currentSchema;
 }
 
 #endif

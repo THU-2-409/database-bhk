@@ -1,14 +1,21 @@
 %{
 #include <stdio.h>
 #include <string>
+#include "../table/Table.h"
+#include "func.h"
 #include "lex.yy.c"
-struct yyUnionType
+#include <vector>
+struct yyStruType
 {
     int type;
+
     int val;
+
     string str;
+
+    std::vector<ColDef> defs;
 };
-#define YYSTYPE yyUnionType  
+#define YYSTYPE yyStruType  
 int yyparse(void);
 %}
 %token P_DATABASE P_DATABASES   P_TABLE   P_TABLES  P_SHOW    P_CREATE
@@ -19,43 +26,45 @@ int yyparse(void);
 %token IDENTIFIER VALUE_INT VALUE_STRING
 %%
 program :   program stmt
-        {
-        }
         |   /* empty */
+        ;
 
 stmt    :   sysStmt ';'
         |   dbStmt ';'
         |   tbStmt ';'
         |   idxStmt ';'
+        ;
 
 sysStmt :   P_SHOW P_DATABASES
+        {
+            listDirectories();
+        }
+        ;
 
 tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
+        {
+            string schema = string("CREATE TABLE ") + $3.str;
+            schema += " (" + $5.str + ");";
+            TableHeader header(schema, $5.defs);
+            if (!Table::createFile(header, path))
+            {
+                printf("error: %d %s\n", errno, strerror(errno));
+            }
+        }
         |   P_DROP P_TABLE tbName
         |   P_DESC tbName
         |   P_INSERT P_INTO tbName P_VALUES valueLists
         |   P_DELETE P_FROM tbName P_WHERE whereClause
         |   P_SELECT selector P_FROM tableList P_WHERE whereClause
+        ;
 
 idxStmt :   P_CREATE P_INDEX tbName '(' colName ')'
         |   P_DROP P_INDEX tbName '(' colName ')'
+        ;
 
 
 
 
-command : exp {printf("%d\n",$1);}
-
-exp: exp PLUS term {$$ = $1 + $3;}
-    |exp MINUS term {$$ = $1 - $3;}
-    |term {$$ = $1;}
-    ;
-term : term TIMES factor {$$ = $1 * $3;}
-    |term DIVIDE factor {$$ = $1/$3;}
-    |factor {$$ = $1;}
-    ;
-factor : INTEGER {$$ = $1;}
-    | LP exp RP {$$ = $2;}
-    ;
 %%
 int main()
 {
