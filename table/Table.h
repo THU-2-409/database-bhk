@@ -11,7 +11,7 @@
 #include <vector>
 #include <map>
 
-#include "./ColDef.h"
+#include "../table/ColDef.h"
 
 using namespace std;
 
@@ -42,7 +42,7 @@ public:
     }
 
     string getSchema() const { return this->schema; }
-    int getColNums() const { return name.size(); }
+    int getColNums() const { return defs.size(); }
     string getName(int col) const { return defs.at(col).name; }
     int getSize(int col) const { return defs.at(col).size; }
     int getType(int col) const { return defs.at(col).type; }
@@ -82,7 +82,7 @@ public:
 class TableInfo {
 public:
     TableHeader header;
-    TableInfo(): header("", vector<string>(), vector<int>()) {}
+    TableInfo(): header("", vector<ColDef>()) {}
 private:
     ByteArray dump();
     int load(char*);
@@ -150,8 +150,8 @@ ByteArray TableHeader:: dump()
     for (int i = 0; i < defs.size(); ++i)
     {
         os.putString(getName(i));
-        os.putInt(getSize[i]);
-        os.putInt(getType[i]);
+        os.putInt(getSize(i));
+        os.putInt(getType(i));
     }
     // 写完
     ByteArray res(buf, os.length());
@@ -167,12 +167,12 @@ int TableHeader:: load(char *buf)
     int colNums;
     is.getInt(colNums);
     defs.clear();
-    name.insert(name.end(), colNums, ColDef());
+    defs.insert(defs.end(), colNums, ColDef());
     for (int i = 0; i < colNums; ++i)
     {
         is.getString(defs[i].name);
         is.getInt(defs[i].size);
-        is.getInt(defs[i].type)
+        is.getInt(defs[i].type);
     }
     return is.length();
 }

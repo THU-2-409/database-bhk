@@ -3,7 +3,6 @@
 #include <string>
 #include "../table/Table.h"
 #include "func.h"
-#include "lex.yy.c"
 #include <vector>
 struct yyStruType
 {
@@ -16,6 +15,10 @@ struct yyStruType
     std::vector<ColDef> defs;
 };
 #define YYSTYPE yyStruType  
+
+string dbPath(".");
+void yyerror(const char* s);
+#include "lex.yy.c"
 int yyparse(void);
 %}
 %token P_DATABASE P_DATABASES   P_TABLE   P_TABLES  P_SHOW    P_CREATE
@@ -32,8 +35,8 @@ program :   program stmt
 
 stmt    :   sysStmt ';'
         |   dbStmt ';'
-        |   tbStmt ';'
-        |   idxStmt ';'
+        /*|   tbStmt ';'
+        |   idxStmt ';'*/
         ;
 
 sysStmt :   P_SHOW P_DATABASES
@@ -42,12 +45,45 @@ sysStmt :   P_SHOW P_DATABASES
         }
         ;
 
+dbStmt  :   P_CREATE P_DATABASE dbName
+        {
+            if (mkdir($3.str.c_str(), 0775))
+            {
+                perror("mkdir err");
+            }
+        }
+        |   P_DROP P_DATABASE dbName
+        {
+            if ($3.str == dbPath) dbPath = string(".");
+            if (rmdir($3.str.c_str()))
+            {
+                perror("rmdir err");
+            }
+        }
+        |   P_USE dbName
+        {
+            dbPath = $2.str;
+        }
+        |   P_SHOW P_TABLES
+        {
+            listTables(dbPath.c_str());
+        }
+        ;
+
+dbName  :   IDENTIFIER  /* temp*/
+        {
+            $$.str = $1.str;
+        }
+        ;
+
+/*
 tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
         {
             string schema = string("CREATE TABLE ") + $3.str;
             schema += " (" + $5.str + ");";
             TableHeader header(schema, $5.defs);
-            if (!Table::createFile(header, path))
+            string path = dbPath + "/" + tbName.str;
+            if (!Table::createFile(header, path.c_str()))
             {
                 printf("error: %d %s\n", errno, strerror(errno));
             }
@@ -61,7 +97,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
 
 idxStmt :   P_CREATE P_INDEX tbName '(' colName ')'
         |   P_DROP P_INDEX tbName '(' colName ')'
-        ;
+        ;*/
 
 
 
@@ -71,7 +107,7 @@ int main()
 {
     return yyparse();
 }
-void yyerror(char* s)
+void yyerror(const char* s)
 {
     fprintf(stderr,"%s",s);
 }

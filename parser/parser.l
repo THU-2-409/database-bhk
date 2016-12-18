@@ -1,7 +1,7 @@
 %{
 #include <string.h>  
 #include <string>
-#include "parser_tab.h"  
+#include "parser.tab.h"  
 extern yyStruType yylval;  
 %}  
 identifier [A-Za-z][_0-9A-Za-z]* 
@@ -11,6 +11,8 @@ simple_op (","|";"|"("|")"|"="|"<"|">")
 op_neq "<>"
 op_leq "<="
 op_geq ">="
+delim [ \r\n]
+whitespaces {delim}+
 %%  
 "DATABASE"	{ return P_DATABASE; }
 "database"	{ return P_DATABASE; }
@@ -87,7 +89,8 @@ op_geq ">="
 {op_neq}    { return OP_NEQ; }
 {op_leq}    { return OP_LEQ; }
 {op_geq}    { return OP_GEQ; }
+{whitespaces} { /* do nothing */ }
 
 
-. {printf("Error");exit(1);}    
+. {printf(".Error\n");exit(1);}    
 %%
