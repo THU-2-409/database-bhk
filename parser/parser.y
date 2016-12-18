@@ -18,6 +18,31 @@ int yyparse(void);
 %token P_DESC P_INDEX   P_AND
 %token IDENTIFIER VALUE_INT VALUE_STRING
 %%
+program :   program stmt
+        {
+        }
+        |   /* empty */
+
+stmt    :   sysStmt ';'
+        |   dbStmt ';'
+        |   tbStmt ';'
+        |   idxStmt ';'
+
+sysStmt :   P_SHOW P_DATABASES
+
+tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
+        |   P_DROP P_TABLE tbName
+        |   P_DESC tbName
+        |   P_INSERT P_INTO tbName P_VALUES valueLists
+        |   P_DELETE P_FROM tbName P_WHERE whereClause
+        |   P_SELECT selector P_FROM tableList P_WHERE whereClause
+
+idxStmt :   P_CREATE P_INDEX tbName '(' colName ')'
+        |   P_DROP P_INDEX tbName '(' colName ')'
+
+
+
+
 command : exp {printf("%d\n",$1);}
 
 exp: exp PLUS term {$$ = $1 + $3;}

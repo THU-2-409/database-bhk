@@ -69,8 +69,7 @@ string '[^']*'
 		}
 
 {string}	{
-		  int len = strlen(yytext);
-		  yylval.str = string(yytext).substr(1, len - 2);
+		  yylval.str = string(yytext).substr(1, yyleng - 2);
 		  yylval.type = VALUE_STRING;
 		  return VALUE_STRING;
 		}
