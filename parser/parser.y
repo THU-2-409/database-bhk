@@ -24,6 +24,7 @@ int yyparse(void);
 %token P_UPDATE   P_SET P_SELECT  P_IS  P_INT P_VARCHAR
 %token P_DESC P_INDEX   P_AND
 %token IDENTIFIER VALUE_INT VALUE_STRING
+%token OP_NEQ OP_GEQ OP_LEQ
 %%
 program :   program stmt
         |   /* empty */

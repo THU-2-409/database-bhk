@@ -7,6 +7,10 @@ extern yyStruType yylval;
 identifier [A-Za-z][_0-9A-Za-z]* 
 int [0-9]+  
 string '[^']*' 
+simple_op (","|";"|"("|")"|"="|"<"|">")
+op_neq "<>"
+op_leq "<="
+op_geq ">="
 %%  
 "DATABASE"	{ return P_DATABASE; }
 "database"	{ return P_DATABASE; }
@@ -78,6 +82,11 @@ string '[^']*'
 		  yylval.type = IDENTIFIER;
 		  return IDENTIFIER;
 		}
+
+{simple_op} { return *yytext; }
+{op_neq}    { return OP_NEQ; }
+{op_leq}    { return OP_LEQ; }
+{op_geq}    { return OP_GEQ; }
 
 
 . {printf("Error");exit(1);}    
