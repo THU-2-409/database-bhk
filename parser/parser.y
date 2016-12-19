@@ -4,6 +4,9 @@
 #include "../table/Table.h"
 #include "func.h"
 #include <vector>
+#include "Value.h"
+#include "WhereC.h"
+#include "SetC.h"
 struct yyStruType
 {
     int type;
@@ -12,7 +15,21 @@ struct yyStruType
 
     string str;
 
+    ColDef def;
+
     std::vector<ColDef> defs;
+
+    Value v;
+
+    std::vector<Value> vlist;
+
+    std::vector< std::vector<Value> > vlists;
+
+    std::vector<WhereC> wclist;
+
+    std::vector<SetC> sclist;
+
+    std::vector<string> clist;
 };
 #define YYSTYPE yyStruType  
 
@@ -70,12 +87,6 @@ dbStmt  :   P_CREATE P_DATABASE dbName
         }
         ;
 
-dbName  :   IDENTIFIER  /* temp*/
-        {
-            $$.str = $1.str;
-        }
-        ;
-
 /*
 tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
         {
@@ -99,7 +110,230 @@ idxStmt :   P_CREATE P_INDEX tbName '(' colName ')'
         |   P_DROP P_INDEX tbName '(' colName ')'
         ;*/
 
+fieldList   :   field
+                {
+                    $$.defs.push_back($1.def);
+                }
+            |   fieldList ',' field
+                {
+                    $$.defs.assign($1.defs.begin(), $1.defs.begin());
+                    if($3.def.type == COL_KEY_T)
+                    {
+                        int size = $$.defs.size();
+                        for(int i = 0; i < size; i++)
+                        {
+                            if($$.defs[i].name = $3.def.name)
+                            {
+                                $$.defs[i].type = COL_KEY_T;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                        $$.defs.push_back($3.def);
+                }
+            ;
 
+field       :   colName type
+                {
+                    $$.def.name = $1.str;
+                    $$.def.size = $2.val;
+                    $$.def.type = COL_REG_T;
+                }
+            |   colName type P_NOT P_NULL
+                {
+                    $$.def.name = $1.str;
+                    $$.def.size = $2.val;
+                    $$.def.type = COL_NOT_NULL_T;
+                }
+            |   P_PRIMATY P_KEY '(' colName ')'
+                {
+                    $$.def.name = $4.str;
+                    $$.def.type = COL_KEY_T;
+                }
+            ;
+
+type        :   P_INT '(' VALUE_INT ')'
+                {
+                    $$.val = $3.val * 4;
+                }
+            |   P_VARCHAR '(' VALUE_INT ')'
+                {
+                    $$.val = $3.val;
+                }
+            ;
+
+valueLists  :   '(' valueList ')'
+                {
+                    $$.vlists.push_back($2.vlist);
+                }
+            |   valueLists ',' '(' valueList ')'
+                {
+                    $$.vlists.assign($1.vlists.begin(), $1.vlists.end());
+                    $$.vlists.push_back($4.vlist);
+                }
+            ;
+
+valueList   :   value
+                {
+                    $$.vlist.push_back($1.v);
+                }
+            |   valueList ',' value
+                {
+                    $$.vlist.assign($1.vlist.begin(), $1.vlist.end());
+                    $$.vlist.push_back($3.v);
+                }
+            ;
+
+value       :   VALUE_INT
+                {
+                    $$.v.type = VAL_INT;
+                    $$.v.val = $1.val;
+                }
+            |   VALUE_STRING
+                {
+                    $$.v.type = VAL_STRING;
+                    $$.v.str = $1.str;
+                }
+            |   P_NULL
+                {
+                    $$.v.type = VAL_NULL;
+                }
+            ;
+
+whereClause :   col op expr
+                {
+                    WhereC wc = new WhereC();
+                    wc.type = $2.type;
+                    wc.exprType = $3.type;
+                    wc.col = $1.str;
+                    if($3.type == EXPR_VAL)
+                        wc.eval = $3.v;
+                    else
+                        wc.ecol = $3.str;
+                    $$.wclist.push_back(wc);
+                }
+            |   col P_IS NULL
+                {
+                    WhereC wc = new WhereC();
+                    wc.type = WC_IS_NULL;
+                    wc.col = $1.str;
+                    $$.wclist.push_back(wc);
+                }
+            |   col P_IS NOT NULL
+                {
+                    WhereC wc = new WhereC();
+                    wc.type = WC_NOT_NULL;
+                    wc.col = $1.str;
+                    $$.wclist.push_back(wc);
+                }
+            |   whereClause P_AND whereClause
+                {
+                    $$.wclist.assign($1.wclist.begin(), $1.wclist.end());
+                    int size = $3.wclist.size();
+                    for(int i = 0; i < size; i++)
+                    {
+                        $$.wclist.push_back($3.wclist[i]);
+                    }
+                }
+            ;
+
+col         :   colName
+                {
+                    $$.str = $1.str;
+                }
+            |   tbName '.' colName
+                {
+                    $$.str = $1.str + "." + $3.str;
+                }   
+            ;
+
+op          :   '='     { $$.type = WC_EQU; }
+            |   OP_NEQ  { $$.type = WC_NOT_EQU; }
+            |   OP_LEQ  { $$.type = WC_LEQ; }
+            |   OP_GEQ  { $$.type = WC_GEQ; }
+            |   '<'     { $$.type = WC_LE; }
+            |   '>'     { $$.type = WC_GR; }
+            ;
+
+expr        :   value
+                {
+                    $$.type = EXPR_VAL;
+                    $$.v = $1.v;
+                }
+            |   col
+                {
+                    $$.type = EXPR_COL;
+                    $$.str = $1.str;
+                }
+            ;   
+
+setClause   :   colName '=' value
+                {
+                    SetC sc = new SetC();
+                    sc.col = $1.str;
+                    sc.val = $3.v;
+                    $$.sclist.push_back(sc);
+                }
+            |   setClause ',' colName '=' value
+                {
+                    $$.sclist.assign($1.sclist.begin(), $1.sclist.end());
+                    SetC sc = new SetC();
+                    sc.col = $3.str;
+                    sc.val = $5.v;
+                    $$.sclist.push_back(sc);
+                }
+            ;
+
+selector    :   '*'
+                {
+                    $$.clist.push_back("*");
+                }
+            |   colList
+                {
+                    $$.clist.assign($1.clist.begin(), $1.clist.end());
+                }
+            ;
+
+colList     :   col
+                {
+                    $$.clist.push_back($1.str);
+                }
+            |   colList ',' col
+                {
+                    $$.clist.assign($1.clist.begin(), $1.clist.end());
+                    $$.clist.push_back($3.str);
+                }
+            ;
+
+tableList   :   tbName
+                {
+                    $$.clist.push_back($1.str);
+                }
+            |   tableList ',' tbName
+                {
+                    $$.clist.assign($1.clist.begin(), $1.clist.end());
+                    $$.clist.push_back($3.str);
+                }
+            ;
+
+dbName      :   IDENTIFIER
+                {
+                    $$.str = $1.str;
+                }
+            ;
+
+tbName      :   IDENTIFIER
+                {
+                    $$.str = $1.str;
+                }
+            ;
+
+colName     :   IDENTIFIER
+                {
+                    $$.str = $1.str;
+                }
+            ;   
 
 
 %%

@@ -1,4 +1,4 @@
-# temp
+﻿# temp
 Makefile
 
 
@@ -60,3 +60,6 @@ result/*
 !/parser/parser.l
 !/parser/parser.y
 !/parser/func.h
+!/parser/SetC.h
+!/parser/Value.h
+!/parser/WhereC.h
