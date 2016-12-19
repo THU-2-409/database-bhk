@@ -133,9 +133,11 @@ idxStmt :   P_CREATE P_INDEX tbName '(' colName ')'
 fieldList   :   field
                 {
                     $$.defs.push_back($1.def);
+                    $$.str = $1.str;
                 }
             |   fieldList ',' field
                 {
+                    $$.str = $1.str + ", " + $3.str;
                     $$.defs.assign($1.defs.begin(), $1.defs.begin());
                     if($3.def.type == COL_KEY_T)
                     {
@@ -159,27 +161,36 @@ field       :   colName type
                     $$.def.name = $1.str;
                     $$.def.size = $2.val;
                     $$.def.type = COL_REG_T;
+                    $$.str = $1.str + " " + $2.str;
                 }
             |   colName type P_NOT P_NULL
                 {
                     $$.def.name = $1.str;
                     $$.def.size = $2.val;
                     $$.def.type = COL_NOT_NULL_T;
+                    $$.str = $1.str + " " + $2.str + " NOT NULL";
                 }
             |   P_PRIMARY P_KEY '(' colName ')'
                 {
                     $$.def.name = $4.str;
                     $$.def.type = COL_KEY_T;
+                    $$.str = string("PRIMARY KEY ") + $1.str + " " + $2.str;
                 }
             ;
 
 type        :   P_INT '(' VALUE_INT ')'
                 {
                     $$.val = $3.val * 4;
+                    char buf[32];
+                    sprintf(buf, "INT(%d)", $3.val);
+                    $$.str = string(buf);
                 }
             |   P_VARCHAR '(' VALUE_INT ')'
                 {
                     $$.val = $3.val;
+                    char buf[32];
+                    sprintf(buf, "VARCHAR(%d)", $3.val);
+                    $$.str = string(buf);
                 }
             ;
 
