@@ -52,8 +52,8 @@ program :   program stmt
 
 stmt    :   sysStmt ';'
         |   dbStmt ';'
-        /*|   tbStmt ';'
-        |   idxStmt ';'*/
+        |   tbStmt ';'
+        |   idxStmt ';'
         ;
 
 sysStmt :   P_SHOW P_DATABASES
@@ -87,28 +87,48 @@ dbStmt  :   P_CREATE P_DATABASE dbName
         }
         ;
 
-/*
 tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
         {
             string schema = string("CREATE TABLE ") + $3.str;
             schema += " (" + $5.str + ");";
             TableHeader header(schema, $5.defs);
-            string path = dbPath + "/" + tbName.str;
-            if (!Table::createFile(header, path.c_str()))
+            string path = dbPath + "/" + $3.str;
+            if (!Table::createFile(header, path))
             {
-                printf("error: %d %s\n", errno, strerror(errno));
+                perror("Table:: createFile");
             }
         }
         |   P_DROP P_TABLE tbName
-        |   P_DESC tbName
+        {
+            string path = dbPath + "/" + $3.str;
+            if (Table::deleteFile(path))
+            {
+                perror("Table:: deleteFile");
+            }
+        }
+        |   P_DESC tbName /* 查看表的schema */
+        {
+            string path = dbPath + "/" + $2.str;
+            Table table;
+            if (!table.open(path))
+            {
+                perror("Table open");
+            }
+            printf("%s\n", table.getSchema().c_str());
+            if (table.close())
+            {
+                perror("Table close");
+            }
+        }
         |   P_INSERT P_INTO tbName P_VALUES valueLists
         |   P_DELETE P_FROM tbName P_WHERE whereClause
+        |   P_UPDATE P_FROM tbName P_SET setClause P_WHERE whereClause
         |   P_SELECT selector P_FROM tableList P_WHERE whereClause
         ;
 
 idxStmt :   P_CREATE P_INDEX tbName '(' colName ')'
         |   P_DROP P_INDEX tbName '(' colName ')'
-        ;*/
+        ;
 
 fieldList   :   field
                 {
@@ -122,7 +142,7 @@ fieldList   :   field
                         int size = $$.defs.size();
                         for(int i = 0; i < size; i++)
                         {
-                            if($$.defs[i].name = $3.def.name)
+                            if($$.defs[i].name == $3.def.name)
                             {
                                 $$.defs[i].type = COL_KEY_T;
                                 break;
@@ -146,7 +166,7 @@ field       :   colName type
                     $$.def.size = $2.val;
                     $$.def.type = COL_NOT_NULL_T;
                 }
-            |   P_PRIMATY P_KEY '(' colName ')'
+            |   P_PRIMARY P_KEY '(' colName ')'
                 {
                     $$.def.name = $4.str;
                     $$.def.type = COL_KEY_T;
@@ -201,9 +221,9 @@ value       :   VALUE_INT
                 }
             ;
 
-whereClause :   col op expr
+whereItem   :   col op expr
                 {
-                    WhereC wc = new WhereC();
+                    WhereC wc;
                     wc.type = $2.type;
                     wc.exprType = $3.type;
                     wc.col = $1.str;
@@ -213,30 +233,31 @@ whereClause :   col op expr
                         wc.ecol = $3.str;
                     $$.wclist.push_back(wc);
                 }
-            |   col P_IS NULL
+            |   col P_IS P_NULL
                 {
-                    WhereC wc = new WhereC();
+                    WhereC wc;
                     wc.type = WC_IS_NULL;
                     wc.col = $1.str;
                     $$.wclist.push_back(wc);
                 }
-            |   col P_IS NOT NULL
+            |   col P_IS P_NOT P_NULL
                 {
-                    WhereC wc = new WhereC();
+                    WhereC wc;
                     wc.type = WC_NOT_NULL;
                     wc.col = $1.str;
                     $$.wclist.push_back(wc);
                 }
-            |   whereClause P_AND whereClause
-                {
-                    $$.wclist.assign($1.wclist.begin(), $1.wclist.end());
-                    int size = $3.wclist.size();
-                    for(int i = 0; i < size; i++)
-                    {
-                        $$.wclist.push_back($3.wclist[i]);
-                    }
-                }
             ;
+
+whereClause :   whereItem
+            {
+                $$.wclist = $1.wclist;
+            }
+            |   whereClause P_AND whereItem
+            {
+                $$.wclist.assign($1.wclist.begin(), $1.wclist.end());
+                $$.wclist.push_back($3.wclist.at(0));
+            }
 
 col         :   colName
                 {
@@ -270,7 +291,7 @@ expr        :   value
 
 setClause   :   colName '=' value
                 {
-                    SetC sc = new SetC();
+                    SetC sc;
                     sc.col = $1.str;
                     sc.val = $3.v;
                     $$.sclist.push_back(sc);
@@ -278,7 +299,7 @@ setClause   :   colName '=' value
             |   setClause ',' colName '=' value
                 {
                     $$.sclist.assign($1.sclist.begin(), $1.sclist.end());
-                    SetC sc = new SetC();
+                    SetC sc;
                     sc.col = $3.str;
                     sc.val = $5.v;
                     $$.sclist.push_back(sc);

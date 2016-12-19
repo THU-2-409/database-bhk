@@ -120,6 +120,8 @@ public:
     static int deleteFile(string path);
     bool open(string path);
     int close();
+
+    string getSchema();
 };
 
 
@@ -301,6 +303,11 @@ int Table::close()
     if (!this->info.writeBack()) return 1;
     HardManager *hard = HardManager::getInstance();
     return hard->close();
+}
+
+string Table:: getSchema()
+{
+    return info.header.getSchema();
 }
 
 #endif
