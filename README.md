@@ -4,51 +4,56 @@
 
 数据库大作业
 
+[1svg]: <./doc/database-bhk.svg> "UML图？"
 
 
 ## 设计
 
 *字符串存储：* **以\0结尾**
 
-### TableHeader.h
+### 重构的结构
 
-应该不需要改
+![结构图][1svg]
 
-### Record.h
-
-| 接口 | 功能 | 备注 |
-| --- | --- | --- |
-| `pair<bool, int> getInt(string)` | | |
-| `pair<bool, string> getString(string)` | | |
-| `bool setInt(string, int, bool)` | | 布尔参数false时，代表null值 |
-| `bool setString(string, string, bool)` | | |
-
-### Table.h
-
-| 接口 | 功能 | 备注 |
-| --- | --- | --- |
-| `static pair<bool, Table> createFile(TableHeader header, string path)` | 创建数据表文件 | 记录管理 |
-|`static int deleteFile(string path)`|删除文件||
-|`bool open(string path)`|打开文件||
-|`int close()`|关闭文件||
-|`Record insertRecord(Record)`|插入||
-|`bool deleteRecord(Record)`|删除||
-|`bool updateRecord(Record real, Record dummy)`|更新||
-|`pair<bool,Record> selectRecord(Record cond)`|查询||
-|`void createIndex(string name)`|为属性创建索引|索引模块|
-|`void deleteIndex(string name)`|删除属性索引|索引模块|
-|`int openIndex(string name)`|打开索引，返回索引的根页|索引模块|
-|`void closeIndex(string name)`|关闭索引缓存|索引模块|
-|`void insertIntoIndex(int page, Record record)`|插入记录至索引|索引模块|
-|`void deleteFromIndex(int page, Record record)`|删除索引中记录|索引模块|
-|`Record findFromIndex(int page, Record record)`|查询索引中记录|索引模块|
-
-| 私有方便接口 | 功能 | 备注 |
-| --- | --- | --- |
-| `char* getChars(int page, int offset, int size)`|返回读数据指针||
-| `bool setChars(int page, int offset, char* buf, int size)`|写入数据||
-| `int getInt(int page, int offset)`| 读整数| |
-| `string getString(int page, int offset)`| 读字符串| |
+> ### TableHeader.h
+> 
+> 应该不需要改
+> 
+> ### Record.h
+> 
+> | 接口 | 功能 | 备注 |
+> | --- | --- | --- |
+> | `pair<bool, int> getInt(string)` | | |
+> | `pair<bool, string> getString(string)` | | |
+> | `bool setInt(string, int, bool)` | | 布尔参数false时，代表null值 |
+> | `bool setString(string, string, bool)` | | |
+> 
+> ### Table.h
+> 
+> | 接口 | 功能 | 备注 |
+> | --- | --- | --- |
+> | `static pair<bool, Table> createFile(TableHeader header, string path)` | 创建数据表文件 | 记录管理 |
+> |`static int deleteFile(string path)`|删除文件||
+> |`bool open(string path)`|打开文件||
+> |`int close()`|关闭文件||
+> |`Record insertRecord(Record)`|插入||
+> |`bool deleteRecord(Record)`|删除||
+> |`bool updateRecord(Record real, Record dummy)`|更新||
+> |`pair<bool,Record> selectRecord(Record cond)`|查询||
+> |`void createIndex(string name)`|为属性创建索引|索引模块|
+> |`void deleteIndex(string name)`|删除属性索引|索引模块|
+> |`int openIndex(string name)`|打开索引，返回索引的根页|索引模块|
+> |`void closeIndex(string name)`|关闭索引缓存|索引模块|
+> |`void insertIntoIndex(int page, Record record)`|插入记录至索引|索引模块|
+> |`void deleteFromIndex(int page, Record record)`|删除索引中记录|索引模块|
+> |`Record findFromIndex(int page, Record record)`|查询索引中记录|索引模块|
+> 
+> | 私有方便接口 | 功能 | 备注 |
+> | --- | --- | --- |
+> | `char* getChars(int page, int offset, int size)`|返回读数据指针||
+> | `bool setChars(int page, int offset, char* buf, int size)`|写入数据||
+> | `int getInt(int page, int offset)`| 读整数| |
+> | `string getString(int page, int offset)`| 读字符串| |
 
 #### 第一页组织
 
