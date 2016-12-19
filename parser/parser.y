@@ -174,7 +174,7 @@ field       :   colName type
                 {
                     $$.def.name = $4.str;
                     $$.def.type = COL_KEY_T;
-                    $$.str = string("PRIMARY KEY ") + $1.str + " " + $2.str;
+                    $$.str = string("PRIMARY KEY (") + $4.str + ")";
                 }
             ;
 
