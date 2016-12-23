@@ -48,6 +48,7 @@ public:
     string getName(int col) const { return defs.at(col).name; }
     int getSize(int col) const { return defs.at(col).size; }
     int getType(int col) const { return defs.at(col).type; }
+    int getConstraint(int col) const { return defs.at(col).constraint; }
     
     ByteArray dump();
     int load(char*);
@@ -85,12 +86,25 @@ class TableInfo {
 public:
     TableHeader header;
     TableInfo(): header("", vector<ColDef>()) {}
+    void make();
+    
 private:
     ByteArray dump();
     int load(char*);
 public:
     void loadFrom();
     bool writeBack();
+
+public:
+    int RID;
+
+public: // 无需存储又常用的值
+    int recordLen;
+    int dataPageRoom;
+    int nullLength;
+
+public:
+    int getRecordLen() { return recordLen; }
 };
 
 
@@ -153,6 +167,16 @@ private:
 
 
 class DataPage {
+private:
+    int page; // 页号
+    Table * table;
+
+public:
+    DataPage(int page, Table * table);
+
+    Record getRecord(int index);
+    Record first();
+    DataPage next();
 };
 
 
@@ -170,6 +194,10 @@ public:
     int close();
 
     string getSchema();
+
+    friend class Datapage;
+    friend class Record;
+    friend class RecordData;
 };
 
 
@@ -179,19 +207,9 @@ public:
 #include "InvertedIndexArray.cpp"
 #include "Record.cpp"
 
-void TableInfo:: loadFrom()
-{
-    HardManager *hard = HardManager::getInstance();
-    char *buf = hard->getChars(0, 0, PAGE_SIZE);
-    this->load(buf);
-}
+#include "../table/DataPage.cpp"
 
-bool TableInfo:: writeBack()
-{
-    HardManager *hard = HardManager::getInstance();
-    ByteArray bufa = this->dump();
-    return hard->setChars(0, 0, bufa.c_str(), bufa.getSize());
-}
+#include "../table/TableInfo.cpp"
 
 ByteArray TableHeader:: dump()
 {
@@ -228,29 +246,6 @@ int TableHeader:: load(char *buf)
         is.getInt(defs[i].type);
     }
     return is.length();
-}
-
-ByteArray TableInfo:: dump()
-{
-    ByteArray buf0 = header.dump();
-    char *buf = new char[PAGE_SIZE];
-    memcpy(buf, buf0.c_str(), buf0.getSize());
-    MemOStream os;
-    os.load(buf);
-    os.seek(buf0.getSize());
-    // 写完
-    ByteArray res(buf, os.length());
-    delete[] buf;
-    return res;
-}
-
-int TableInfo:: load(char *buf)
-{
-    int offset = header.load(buf);
-    MemIStream is;
-    is.load(buf + offset);
-    // 读完
-    return offset + is.length();
 }
 
 HardManager* HardManager::getInstance()
