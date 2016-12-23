@@ -15,6 +15,11 @@ private:
     char *buf;
     int size;
 public:
+    ByteArray()
+        :buf(NULL), size(0)
+    {
+    }
+
     ByteArray(const void *src, int size)
         :size(size)
     {
@@ -22,6 +27,7 @@ public:
         buf = new char[size];
         memcpy(buf, src, size);
     }
+
     ByteArray(const ByteArray &ori)
         :size(ori.size)
     {
