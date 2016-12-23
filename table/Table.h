@@ -8,6 +8,7 @@
 #include <utility>
 #include <stdio.h>
 #include <string>
+#include <algorithm>
 #include <vector>
 #include <map>
 
@@ -20,6 +21,7 @@ class HardManager;
 class TableInfo;
 class Trash;
 class Record;
+class InvertedIndexArray;
 class RecordData;
 class DataPage;
 class VarPage;
@@ -97,10 +99,56 @@ class Trash {
 
 
 class Record {
+public:
+    Record(int p, int o, TableInfo* t,vector<int> vv)
+        :page(p),offset(o),info(t),v(vv) 
+        {
+            int size = v.size();
+            for(int i = 0; i < size; i++)
+            {
+                if(v[i] == o)
+                {
+                    oi = i;
+                    break;
+                }
+            }
+        }
+    bool next();
+    RecordData getData();
+    void setData(RecordData rd);
+private:
+    int page;
+    int offset;
+    int oindex;
+    TableInfo *info;
+    vector<int> v;
 };
 
+class InvertedIndexArray {
+public:
+    InvertedIndexArray(int p):page(p){};
+    void push(int offset);
+    void remove(int offset);
+    vector<int> getVector();
+private:
+    int page;
+};
 
 class RecordData {
+ public:
+    pair<bool, int> getInt(string fname);//fieldname 属性名
+    void setInt(string fname, int value);
+
+    pair<bool, string> getString(string fname);
+    void setString(string fname, string value);
+
+    void setNULL(string fname);
+
+    pair<bool, ByteArray> getBA(string fname);
+    void setBA(string fname, ByteArray value);
+
+private:
+    map< string, pair<bool, ByteArray> > m;
 };
 
 
@@ -127,6 +175,9 @@ public:
 
 
 // 以下为实现
+#include "RecordData.cpp"
+#include "InvertedIndexArray.cpp"
+#include "Record.cpp"
 
 void TableInfo:: loadFrom()
 {
