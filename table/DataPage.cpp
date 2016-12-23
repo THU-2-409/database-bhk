@@ -1,8 +1,14 @@
 #ifndef _DATAPAGE_CPP_
 #define _DATAPAGE_CPP_
 
+DataPage:: ~DataPage()
+{
+    if (NULL != invArr)
+        delete invArr;
+}
+
 DataPage:: DataPage(int page, Table * table)
-    :   page(page), table(table)
+    :   page(page), table(table), invArr(NULL)
 {
 }
 
@@ -21,7 +27,15 @@ DataPage DataPage:: next()
 
 Record DataPage:: first()
 {
-    // TODO
+    if (NULL == invArr)
+    {
+        invArr = new InvertedIndexArray(page);
+    }
+    vector<int> vec = invArr.getVector();
+    if (vec.size())
+        return Record(page, vec.front(), &(table->info), vec);
+    else
+        return this->getRecord(0);
 }
 
 #endif

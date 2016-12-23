@@ -170,9 +170,11 @@ class DataPage {
 private:
     int page; // 页号
     Table * table;
+    InvertedIndexArray * invArr;
 
 public:
     DataPage(int page, Table * table);
+    ~DataPage();
 
     Record getRecord(int index);
     Record first();
