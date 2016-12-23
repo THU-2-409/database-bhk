@@ -105,6 +105,16 @@ class RecordData {
 
 
 class DataPage {
+private:
+    int page; // 页号
+    Table * table;
+
+public:
+    DataPage(int page, Table * table);
+
+    Record getRecord(int index);
+    Record first();
+    DataPage next();
 };
 
 
@@ -122,6 +132,10 @@ public:
     int close();
 
     string getSchema();
+
+    friend class Datapage;
+    friend class Record;
+    friend class RecordData;
 };
 
 
