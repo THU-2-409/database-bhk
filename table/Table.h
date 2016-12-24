@@ -174,6 +174,9 @@ class RecordData {
     pair<bool, ByteArray> getBA(string fname);
     void setBA(string fname, ByteArray value);
 
+    map< string, pair<bool, ByteArray> >::iterator begin() { return m.begin(); }
+    map< string, pair<bool, ByteArray> >::iterator end() { return m.end(); }
+
 private:
     map< string, pair<bool, ByteArray> > m;
 };
