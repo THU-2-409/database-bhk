@@ -1,8 +1,6 @@
 #ifndef _TABLE_CPP_
 #define _TABLE_CPP_
 
-void Table:: insert(RecordData data);
-
 vector<Record> Table::find(RecordData data)
 {
 	vector<Record> v;
@@ -50,5 +48,12 @@ vector<Record> Table::find(RecordData data)
 
 	return v;
 }
+
+void Table:: insert(RecordData data)
+{
+    Record dst = this->trash.allocRecord();
+    dst.setData(data);
+}
+
 
 #endif

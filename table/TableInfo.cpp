@@ -4,7 +4,8 @@
 TableInfo:: TableInfo()
     : header("", vector<ColDef>()),
     RID(0), nextNewPage(0), nextNewRecPage(-1),
-    nextNewRecOffset(0), maxPageID(0)
+    nextNewRecOffset(0), maxPageID(0),
+    dataPageHead(0)
 {
 }
 
@@ -37,6 +38,7 @@ ByteArray TableInfo:: dump()
     os.putInt(nextNewRecPage);
     os.putInt(nextNewRecOffset);
     os.putInt(maxPageID);
+    os.putInt(dataPageHead);
     // 写完
     ByteArray res(buf, os.length());
     delete[] buf;
@@ -54,6 +56,7 @@ int TableInfo:: load(char *buf)
     is.getInt(nextNewRecPage);
     is.getInt(nextNewRecOffset);
     is.getInt(maxPageID);
+    is.getInt(dataPageHead);
     // 读完
     return offset + is.length();
 }

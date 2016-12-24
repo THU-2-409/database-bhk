@@ -46,6 +46,7 @@ DataPage Trash:: allocPage()
     else
     {
         ret = ++ maxPageID;
+        // 将空位置放入rec的链表
         int unit = table->info.recordLen;
         int size = table->info.dataPageRoom;
         int offset = 4;
@@ -62,9 +63,14 @@ DataPage Trash:: allocPage()
         h->setChars(ret, offset, &tmp, 2);
         tmp = -1;
         h->setChars(ret, PAGE_SIZE - 2, &tmp, 2);
+        // rec链表头维护
         nextPage = ret;
         nextOffset = 4;
     }
+    // 将此页放入“占用”的数据页链表
+    int &dataPageHead = table->info.dataPageHead;
+    h->setInt(ret, 0, dataPageHead);
+    dataPageHead = ret;
     return DataPage(ret, table);
 }
 
