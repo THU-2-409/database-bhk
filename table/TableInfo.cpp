@@ -1,6 +1,13 @@
 #ifndef _TABLEINFO_CPP_
 #define _TABLEINFO_CPP_
 
+TableInfo:: TableInfo()
+    : header("", vector<ColDef>()),
+    RID(0), nextNewPage(0), nextNewRecPage(-1),
+    nextNewRecOffset(0)
+{
+}
+
 void TableInfo:: loadFrom()
 {
     HardManager *hard = HardManager::getInstance();
@@ -26,6 +33,9 @@ ByteArray TableInfo:: dump()
     os.seek(buf0.getSize());
     // 开始写
     os.putInt(RID);
+    os.putInt(nextNewPage);
+    os.putInt(nextNewRecPage);
+    os.putInt(nextNewRecOffset);
     // 写完
     ByteArray res(buf, os.length());
     delete[] buf;
@@ -39,6 +49,9 @@ int TableInfo:: load(char *buf)
     is.load(buf + offset);
     // 开始读
     is.getInt(RID);
+    is.getInt(nextNewPage);
+    is.getInt(nextNewRecPage);
+    is.getInt(nextNewRecOffset);
     // 读完
     return offset + is.length();
 }
@@ -51,6 +64,7 @@ void TableInfo:: make()
     int res = 4 + tmp; // __RID__ + 倒排数组
     for (int i = 0; i < cnt; ++i)
         res += header.getSize(i);
+    if (res < 6) res = 6;
     recordLen = res;
 
     int ret = PAGE_SIZE - 4;

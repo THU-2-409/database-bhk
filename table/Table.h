@@ -85,7 +85,7 @@ public:
 class TableInfo {
 public:
     TableHeader header;
-    TableInfo(): header("", vector<ColDef>()) {}
+    TableInfo();
     void make();
     
 private:
@@ -97,6 +97,9 @@ public:
 
 public:
     int RID;
+    int nextNewPage;
+    int nextNewRecPage;
+    int nextNewRecOffset;
 
 public: // 无需存储又常用的值
     int recordLen;
@@ -109,7 +112,10 @@ public:
 
 
 class Trash {
+private:
+    Table * table;
 public:
+    Trash(Table * table):table(table) {}
     DataPage allocPage();
     Record allocRecord();
     void freePage(int page);
