@@ -109,6 +109,11 @@ public:
 
 
 class Trash {
+public:
+    DataPage allocPage();
+    Record allocRecord();
+    void freePage(int page);
+    void freeRecord(int page, int offset);
 };
 
 
@@ -177,6 +182,8 @@ public:
     Record getRecord(int index);
     Record first();
     DataPage next();
+
+    void removeRecord(/* ??? */);
 };
 
 
