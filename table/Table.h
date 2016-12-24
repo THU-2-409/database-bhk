@@ -100,6 +100,7 @@ public:
     int nextNewRecPage;
     int nextNewRecOffset;
     int maxPageID;
+    int dataPageHead;
 
 public: // 无需存储又常用的值
     int recordLen;
