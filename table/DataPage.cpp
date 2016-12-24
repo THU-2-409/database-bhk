@@ -38,4 +38,23 @@ Record DataPage:: first()
         return this->getRecord(0);
 }
 
+void DataPage:: removeRecord(int offset)
+{
+    if (NULL == invArr)
+    {
+        invArr = new InvertedIndexArray(page);
+    }
+    if (invArr->remove(offset)) return ;
+    int &nextNewRecPage = table->info.nextNewRecPage;
+    int &nextNewRecOffset = table->info.nextNewRecOffset;
+    HardManager * h = HardManager::getInstance();
+    h->setInt(page, offset, nextNewRecPage);
+    short tmp = nextNewRecOffset;
+    h->setChars(page, offset, &tmp, sizeof(short));
+    nextNewRecPage = page;
+    nextNewRecOffset = offset;
+    short * ps = (short*)h->getChars(page, PAGE_SIZE - 2, 2);
+    if (-1 == *ps) table->trash.freePage(page);
+}
+
 #endif

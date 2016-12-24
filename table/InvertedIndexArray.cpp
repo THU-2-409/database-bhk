@@ -18,20 +18,21 @@ void InvertedIndexArray::push(int offset)
 	hm->setChars(page, o - 2, buf, 4);
 }
 
-void InvertedIndexArray::remove(int offset)
+int InvertedIndexArray::remove(int offset)
 {
 	HardManager *hm = HardManager::getInstance();
 	char* phead =  hm->getChars(page, 0, PAGE_SIZE);
 	int o = PAGE_SIZE - 2;
-	while(*(short*)(phead + o) != (short)offset)
+    short * p = (short*)(phead + o);
+	while(*p != (short)offset && *p != -1) --p, o -= 2;
+    if (-1 == *p) return -1;
+	while(*p != -1)
 	{
+		hm->setChars(page, o, phead + o - 2, 2);
 		o -= 2;
+        -- p;
 	}
-	while(*(short*)(phead + o) != -1)
-	{
-		hm->setChars(page, o, phead + o -2, 2);
-		o -= 2;
-	}
+    return 0;
 }
 
 vector<int> InvertedIndexArray::getVector()

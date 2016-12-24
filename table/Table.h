@@ -24,7 +24,6 @@ class Record;
 class InvertedIndexArray;
 class RecordData;
 class DataPage;
-class VarPage;
 
 
 
@@ -100,6 +99,7 @@ public:
     int nextNewPage;
     int nextNewRecPage;
     int nextNewRecOffset;
+    int maxPageID;
 
 public: // 无需存储又常用的值
     int recordLen;
@@ -115,7 +115,7 @@ class Trash {
 private:
     Table * table;
 public:
-    Trash(Table * table):table(table) {}
+    Trash(Table * table);
     DataPage allocPage();
     Record allocRecord();
     void freePage(int page);
@@ -133,7 +133,7 @@ public:
             {
                 if(v[i] == o)
                 {
-                    oi = i;
+                    oindex = i;
                     break;
                 }
             }
@@ -141,6 +141,8 @@ public:
     bool next();
     RecordData getData();
     void setData(RecordData rd);
+    int getPageID() { return page; }
+    int getOffset() { return offset; }
 private:
     int page;
     int offset;
@@ -153,7 +155,7 @@ class InvertedIndexArray {
 public:
     InvertedIndexArray(int p):page(p){};
     void push(int offset);
-    void remove(int offset);
+    int remove(int offset);
     vector<int> getVector();
 private:
     int page;
@@ -187,22 +189,26 @@ public:
     DataPage(int page, Table * table);
     ~DataPage();
 
+    int getPageID() { return page; }
     Record getRecord(int index);
     Record first();
     DataPage next();
 
-    void removeRecord(/* ??? */);
-};
-
-
-class VarPage {
+    void removeRecord(int offset);
+    void removeRecord(Record rec)
+    {
+        if (rec.getPageID() == page)
+            this->removeRecord(rec.getOffset());
+    }
 };
 
 
 class Table {
 private:
     TableInfo info;
+    Trash trash;
 public:
+    Table(): trash(this) {}
     static bool createFile(TableHeader header, string path);
     static int deleteFile(string path);
     bool open(string path);
@@ -226,29 +232,7 @@ public:
 
 #include "../table/TableInfo.cpp"
 
-Record Trash::allocRecord()
-{
-    vector<int> v;
-    if(nextNewRecPage == -1)
-        allocPage();
-    Record ret(nextNewRecPage, nextNewRecOffset, &(table->info), v);
-    HardManager *hm = HardManager::getInstance();
-    char* rec = hm->getChars(nextNewRecPage, nextNewRecOffset, table->info.recordLen);
-    nextNewRecPage = *(int*)rec;
-    nextNewRecOffset = *(short*)(rec + 4);
-    return ret;
-}
-
-void Trash::freeRecord(int page, int offset)
-{
-    HardManager *hm = HardManager::getInstance();
-    char buf[6];
-    *(int*)buf = nextNewRecPage;
-    *(short*)(buf + 4) = (short)nextNewRecOffset;
-    hm->setChars(page, offset, buf, 6);
-    nextNewRecPage = page;
-    nextNewRecOffset = offset;
-}
+#include "../table/Trash.cpp"
 
 ByteArray TableHeader:: dump()
 {
