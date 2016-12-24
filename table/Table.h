@@ -48,6 +48,8 @@ public:
     int getSize(int col) const { return defs.at(col).size; }
     int getType(int col) const { return defs.at(col).type; }
     int getConstraint(int col) const { return defs.at(col).constraint; }
+    int getCol(string name) { return dict[name]; }
+    int getType(string name) { return getType(getCol(name)); }
     
     ByteArray dump();
     int load(char*);
