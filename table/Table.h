@@ -220,6 +220,30 @@ public:
 
 #include "../table/TableInfo.cpp"
 
+Record Trash::allocRecord()
+{
+    vector<int> v;
+    if(nextNewRecPage == -1)
+        allocPage();
+    Record ret(nextNewRecPage, nextNewRecOffset, &(table->info), v);
+    HardManager *hm = HardManager::getInstance();
+    char* rec = hm->getChars(nextNewRecPage, nextNewRecOffset, table->info.recordLen);
+    nextNewRecPage = *(int*)rec;
+    nextNewRecOffset = *(short*)(rec + 4);
+    return ret;
+}
+
+void Trash::freeRecord(int page, int offset)
+{
+    HardManager *hm = HardManager::getInstance();
+    char buf[6];
+    *(int*)buf = nextNewRecPage;
+    *(short*)(buf + 4) = (short)nextNewRecOffset;
+    hm->setChars(page, offset, buf, 6);
+    nextNewRecPage = page;
+    nextNewRecOffset = offset;
+}
+
 ByteArray TableHeader:: dump()
 {
     char *buf = new char[PAGE_SIZE];
