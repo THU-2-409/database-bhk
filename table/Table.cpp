@@ -51,8 +51,11 @@ vector<Record> Table::find(RecordData data)
 
 void Table:: insert(RecordData data)
 {
+    ++ info.RID;
     Record dst = this->trash.allocRecord();
-    dst.setData(data);
+    dst.setData(data, true);
+    InvertedIndexArray inv(dst.getPageID());
+    inv.push(dst.getOffset());
 }
 
 

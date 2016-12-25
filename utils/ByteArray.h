@@ -3,7 +3,7 @@
 
 #include <assert.h>
 #include <cstring>
-#include <errno>
+#include <cerrno>
 
 /* ByteArray
  * 字节数组封装

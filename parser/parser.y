@@ -37,6 +37,82 @@ string dbPath(".");
 void yyerror(const char* s);
 #include "lex.yy.c"
 int yyparse(void);
+
+int table_open(Table &table, string path)
+{
+    if (!table.open(path))
+    {
+        perror("Table open");
+        return -1;
+    }
+    return 0;
+}
+int table_close(Table &table)
+{
+    if (!table.close())
+    {
+        perror("Table close");
+        return -1;
+    }
+    return 0;
+}
+
+int intcmp(int a, int b)
+{
+    if (a == b) return 0;
+    else return a < b ? -1 : 1;
+}
+// 固定值限制
+bool checkCond(RecordData &data, vector<WhereC> &cond)
+{
+    for (int i = 0, cmp; i < cond.size(); ++i)
+    {
+        bool flag = false;
+        string &col = cond[i].col;
+        if (WC_IS_NULL != cond[i].type && WC_NOT_NULL != cond[i].type)
+        {
+            switch (cond[i].eval.type)
+            {
+                case VAL_INT:
+                    cmp = intcmp(data.getInt(col).second,
+                        cond[i].eval.val);
+                    break;
+                case VAL_STRING:
+                    cmp = data.getString(col).second
+                        .compare(cond[i].eval.str);
+                    break;
+                case VAL_NULL:
+                    break;
+            }
+        }
+        switch (cond[i].type)
+        {
+            case WC_IS_NULL:
+                flag = data.isNULL(col);
+                break;
+            case WC_NOT_NULL:
+                flag = !data.isNULL(col);
+                break;
+            case WC_NOT_EQU:
+                flag = cmp != 0;
+                break;
+            case WC_LEQ:
+                flag = cmp <= 0;
+                break;
+            case WC_GEQ:
+                flag = cmp >= 0;
+                break;
+            case WC_LE:
+                flag = cmp < 0;
+                break;
+            case WC_GR:
+                flag = cmp > 0;
+                break;
+        }
+        if (!flag) return false;
+    }
+    return true;
+}
 %}
 %token P_DATABASE P_DATABASES   P_TABLE   P_TABLES  P_SHOW    P_CREATE
 %token P_DROP P_USE P_PRIMARY P_KEY P_NOT P_NULL
@@ -110,20 +186,144 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
         {
             string path = dbPath + "/" + $2.str;
             Table table;
-            if (!table.open(path))
-            {
-                perror("Table open");
-            }
+            table_open(table, path);
             printf("%s\n", table.getSchema().c_str());
-            if (table.close())
-            {
-                perror("Table close");
-            }
+            table_close(table);
         }
         |   P_INSERT P_INTO tbName P_VALUES valueLists
+        {
+            string path = dbPath + "/" + $3.str;
+            Table table;
+            table_open(table, path);
+            TableHeader & header = table.getHeader();
+            for (int k = 0; k < $5.vlists.size(); ++k)
+            {
+                printf("1go\n");
+                RecordData tmp;
+                vector<Value> &rda = $5.vlists[k];
+                for (int i = 0; i < rda.size(); ++i)
+                {
+                    printf("2go%d\n", i);
+                    Value &v = rda[i];
+                    string name = header.getName(i);
+                    switch (v.type)
+                    {
+                        case VAL_INT:
+                            tmp.setInt(name, v.val);
+                            break;
+                        case VAL_STRING:
+                            tmp.setString(name, v.str);
+                            break;
+                        case VAL_NULL:
+                            tmp.setNULL(name);
+                            break;
+                    }
+                }
+                printf("3go\n");
+                table.insert(tmp);
+            }
+            table_close(table);
+        }
         |   P_DELETE P_FROM tbName P_WHERE whereClause
         |   P_UPDATE P_FROM tbName P_SET setClause P_WHERE whereClause
         |   P_SELECT selector P_FROM tableList P_WHERE whereClause
+        {
+            RecordData eqd;
+            vector<WhereC> vcond;
+            for (int i = 0; i < $6.wclist.size(); ++i)
+            {
+                WhereC &c = $6.wclist[i];
+                if (EXPR_VAL == c.exprType && WC_EQU == c.type)
+                {
+                    switch (c.eval.type)
+                    {
+                        case VAL_INT:
+                            eqd.setInt(c.col, c.eval.val);
+                            break;
+                        case VAL_STRING:
+                            eqd.setString(c.col, c.eval.str);
+                            break;
+                        case VAL_NULL:
+                            eqd.setNULL(c.col);
+                            break;
+                    }
+                } else 
+                    if (EXPR_VAL == c.exprType) vcond.push_back(c);
+            }
+            vector<pair<string, RecordData> > meta, res;
+            vector<pair<string, string> > colsh;
+            vector<int> coltype;
+            bool allcol = "*" == $2.clist[0];
+            if (!allcol)
+            {
+                coltype = vector<int>($2.clist.size(), 0);
+                for (int i = 0; i < $2.clist.size(); ++i)
+                    colsh.push_back(make_pair(string(), $2.clist[i]));
+            }
+            Table table;
+            for (int Ti = 0; Ti < $4.clist.size(); ++Ti)
+            {
+                string tb = $4.clist[Ti];
+                table_open(table, dbPath + "/" + tb);
+                TableHeader &header = table.getHeader();
+                if (allcol)
+                {
+                    coltype.insert(coltype.end(), header.getColNums(), 0);
+                    for (int i = 0; i < header.getColNums(); ++i)
+                        colsh.push_back(make_pair(tb, header.getName(i)));
+                }
+                for (int i = 0; i < colsh.size(); ++i)
+                    if (colsh[i].first == tb || (colsh[i].first.empty()
+                        && 0 == Ti))
+                    {
+                        coltype[i] = header.getType(colsh[i].second);
+                    }
+                vector<Record> temp = table.find(eqd);
+                for (int i = 0; i < temp.size(); ++i)
+                {
+                    RecordData data = temp[i].getData();
+                    if (checkCond(data, vcond))
+                        meta.push_back(make_pair(tb, data));
+                }
+                table_close(table);
+            }
+            // 联合查询
+            res = meta;
+            // 输出 (! 单表查询)
+            for (int i = 0; i < colsh.size(); ++i)
+                printf("%s%s%c", colsh[i].first.c_str(),
+                    colsh[i].second.c_str(), 
+                    (i < colsh.size() - 1) ? '|' : '\n');
+            for (int i = 0; i < res.size(); ++i)
+            {
+                RecordData &data = res[i].second;
+                for (int j = 0; j < colsh.size(); ++j)
+                {
+                    string name = colsh[j].second;
+                    if (data.isNULL(name))
+                    {
+                        printf("null");
+                    }
+                    else
+                    {
+                        switch (coltype[j])
+                        {
+                            case COL_TYPE_VINT:
+                                printf("%d", data.getInt(name).second);
+                                break;
+                            case COL_TYPE_VSTR:
+                                printf("%s", data.getString(name)
+                                    .second.c_str());
+                                break;
+                            default:
+                                printf("?? type err ??");
+                                break;
+                        }
+                    }
+                    printf("%c", (j < colsh.size() - 1) ? '|' : '\n');
+                }
+            }
+        }
         ;
 
 idxStmt :   P_CREATE P_INDEX tbName '(' colName ')'
@@ -138,7 +338,8 @@ fieldList   :   field
             |   fieldList ',' field
                 {
                     $$.str = $1.str + ", " + $3.str;
-                    $$.defs.assign($1.defs.begin(), $1.defs.begin());
+                    //$$.defs.assign($1.defs.begin(), $1.defs.begin());
+                    $$.defs = $1.defs;
                     if($3.def.constraint == COL_KEY_T)
                     {
                         int size = $$.defs.size();
@@ -182,7 +383,7 @@ field       :   colName type
 
 type        :   P_INT '(' VALUE_INT ')'
                 {
-                    $$.val = $3.val * 4;
+                    $$.val = 4;
                     $$.type = COL_TYPE_VINT;
                     char buf[32];
                     sprintf(buf, "INT(%d)", $3.val);
@@ -204,7 +405,8 @@ valueLists  :   '(' valueList ')'
                 }
             |   valueLists ',' '(' valueList ')'
                 {
-                    $$.vlists.assign($1.vlists.begin(), $1.vlists.end());
+                    //$$.vlists.assign($1.vlists.begin(), $1.vlists.end());
+                    $$.vlists = $1.vlists;
                     $$.vlists.push_back($4.vlist);
                 }
             ;
@@ -215,7 +417,8 @@ valueList   :   value
                 }
             |   valueList ',' value
                 {
-                    $$.vlist.assign($1.vlist.begin(), $1.vlist.end());
+                    //$$.vlist.assign($1.vlist.begin(), $1.vlist.end());
+                    $$.vlist = $1.vlist;
                     $$.vlist.push_back($3.v);
                 }
             ;
@@ -270,7 +473,8 @@ whereClause :   whereItem
             }
             |   whereClause P_AND whereItem
             {
-                $$.wclist.assign($1.wclist.begin(), $1.wclist.end());
+                //$$.wclist.assign($1.wclist.begin(), $1.wclist.end());
+                $$.wclist = $1.wclist;
                 $$.wclist.push_back($3.wclist.at(0));
             }
 
@@ -313,7 +517,8 @@ setClause   :   colName '=' value
                 }
             |   setClause ',' colName '=' value
                 {
-                    $$.sclist.assign($1.sclist.begin(), $1.sclist.end());
+                    //$$.sclist.assign($1.sclist.begin(), $1.sclist.end());
+                    $$.sclist = $1.sclist;
                     SetC sc;
                     sc.col = $3.str;
                     sc.val = $5.v;
@@ -327,7 +532,8 @@ selector    :   '*'
                 }
             |   colList
                 {
-                    $$.clist.assign($1.clist.begin(), $1.clist.end());
+                    //$$.clist.assign($1.clist.begin(), $1.clist.end());
+                    $$.clist = $1.clist;
                 }
             ;
 
@@ -337,7 +543,8 @@ colList     :   col
                 }
             |   colList ',' col
                 {
-                    $$.clist.assign($1.clist.begin(), $1.clist.end());
+                    //$$.clist.assign($1.clist.begin(), $1.clist.end());
+                    $$.clist = $1.clist;
                     $$.clist.push_back($3.str);
                 }
             ;
@@ -348,7 +555,8 @@ tableList   :   tbName
                 }
             |   tableList ',' tbName
                 {
-                    $$.clist.assign($1.clist.begin(), $1.clist.end());
+                    //$$.clist.assign($1.clist.begin(), $1.clist.end());
+                    $$.clist = $1.clist;
                     $$.clist.push_back($3.str);
                 }
             ;
@@ -373,9 +581,13 @@ colName     :   IDENTIFIER
 
 
 %%
-int main()
+int main(int args, char *argv[])
 {
-    return yyparse();
+    if (args > 1)
+        freopen(argv[1], "r", stdin);
+    int ret = yyparse();
+    if (args > 1) fclose(stdin);
+    return ret;
 }
 void yyerror(const char* s)
 {

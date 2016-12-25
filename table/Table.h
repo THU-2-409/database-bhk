@@ -24,6 +24,7 @@ class Record;
 class InvertedIndexArray;
 class RecordData;
 class DataPage;
+class Table;
 
 
 
@@ -75,11 +76,11 @@ public:
     int close();
 public:
     char* getChars(int page, int offset, int size);
-    bool setChars(int page, int offset, const void *buf, int size);
+    int setChars(int page, int offset, const void *buf, int size);
     int getInt(int page, int offset);
     string getString(int page, int offset);
-    bool setInt(int page, int offset, int val);
-    bool setString(int page, int offset, string str);
+    int setInt(int page, int offset, int val);
+    int setString(int page, int offset, string str);
 };
 
 
@@ -143,7 +144,7 @@ public:
         }
     bool next();
     RecordData getData();
-    void setData(RecordData rd);
+    void setData(RecordData rd, bool newRec = false);
     int getPageID() { return page; }
     int getOffset() { return offset; }
 private:
@@ -172,6 +173,7 @@ class RecordData {
     pair<bool, string> getString(string fname);
     void setString(string fname, string value);
 
+    bool isNULL(string name);
     void setNULL(string fname);
 
     pair<bool, ByteArray> getBA(string fname);
@@ -223,11 +225,13 @@ public:
     void insert(RecordData data);
     vector<Record> find(RecordData data);
 
+    TableHeader & getHeader() { return info.header; }
     string getSchema();
 
-    friend class Datapage;
+    friend class DataPage;
     friend class Record;
     friend class RecordData;
+    friend class Trash;
 };
 
 

@@ -23,6 +23,11 @@ void RecordData::setString(string fname, string value)
 	m[fname] = make_pair(true, ByteArray(value.c_str(), value.size() + 1));
 }
 
+bool RecordData:: isNULL(string name)
+{
+    return !m[name].first;
+}
+
 void RecordData::setNULL(string fname)
 {
 	m[fname] = make_pair(false, ByteArray());

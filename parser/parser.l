@@ -7,7 +7,7 @@ extern yyStruType yylval;
 identifier [A-Za-z][_0-9A-Za-z]* 
 int [0-9]+  
 string '[^']*' 
-simple_op (","|";"|"("|")"|"="|"<"|">")
+simple_op (","|";"|"("|")"|"="|"<"|">"|"*")
 op_neq "<>"
 op_leq "<="
 op_geq ">="

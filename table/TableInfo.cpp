@@ -27,7 +27,7 @@ bool TableInfo:: writeBack()
 ByteArray TableInfo:: dump()
 {
     ByteArray buf0 = header.dump();
-    char *buf = new char[PAGE_SIZE];
+    char buf[PAGE_SIZE];
     memcpy(buf, buf0.c_str(), buf0.getSize());
     MemOStream os;
     os.load(buf);
@@ -41,7 +41,6 @@ ByteArray TableInfo:: dump()
     os.putInt(dataPageHead);
     // 写完
     ByteArray res(buf, os.length());
-    delete[] buf;
     return res;
 }
 

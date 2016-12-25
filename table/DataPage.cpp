@@ -31,7 +31,7 @@ Record DataPage:: first()
     {
         invArr = new InvertedIndexArray(page);
     }
-    vector<int> vec = invArr.getVector();
+    vector<int> vec = invArr->getVector();
     if (vec.size())
         return Record(page, vec.front(), &(table->info), vec);
     else

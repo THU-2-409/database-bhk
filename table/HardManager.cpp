@@ -51,13 +51,13 @@ char* HardManager::getChars(int page, int offset, int size)
     return pages[page] + offset;
 }
 
-bool HardManager::setChars(int page, int offset, const void *buf, int size)
+int HardManager::setChars(int page, int offset, const void *buf, int size)
 {
-    if (offset + size > PAGE_SIZE) return false;
-    if (!_preAccess(page)) return false;
+    if (offset + size > PAGE_SIZE) return -1;
+    if (!_preAccess(page)) return -1;
     bufPageManager.markDirty(pageIndexs[page]);
     memcpy(pages[page] + offset, buf, size);
-    return true;
+    return 0;
 }
 
 int HardManager::getInt(int page, int offset)
@@ -73,12 +73,12 @@ string HardManager::getString(int page, int offset)
     return string(buf);
 }
 
-bool HardManager::setInt(int page, int offset, int val)
+int HardManager::setInt(int page, int offset, int val)
 {
     return setChars(page, offset, &val, 4);
 }
 
-bool HardManager::setString(int page, int offset, string str)
+int HardManager::setString(int page, int offset, string str)
 {
     // \0 也要写入文件
     return setChars(page, offset, str.c_str(), str.size() + 1);

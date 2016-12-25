@@ -3,7 +3,7 @@
 
 ByteArray TableHeader:: dump()
 {
-    char *buf = new char[PAGE_SIZE];
+    char buf[PAGE_SIZE];
     MemOStream os;
     os.load(buf);
     os.putString(schema);
@@ -16,7 +16,6 @@ ByteArray TableHeader:: dump()
     }
     // 写完
     ByteArray res(buf, os.length());
-    delete[] buf;
     return res;
 }
 
@@ -29,11 +28,13 @@ int TableHeader:: load(char *buf)
     is.getInt(colNums);
     defs.clear();
     defs.insert(defs.end(), colNums, ColDef());
+    dict.clear();
     for (int i = 0; i < colNums; ++i)
     {
         is.getString(defs[i].name);
         is.getInt(defs[i].size);
         is.getInt(defs[i].type);
+        dict[defs[i].name] = i;
     }
     return is.length();
 }

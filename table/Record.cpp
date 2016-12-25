@@ -3,11 +3,11 @@
 
 bool Record::next()
 {
-	if(oi >= v.size() - 1)
+	if(oindex >= v.size() - 1)
 		return false;
 
-	oi ++;
-	offset = v[oi];
+	oindex ++;
+	offset = v[oindex];
 	return true;
 }
 
@@ -48,11 +48,15 @@ RecordData Record::getData()
 	return rd;
 }
 
-void Record::setData(RecordData rd)
+void Record::setData(RecordData rd, bool newRec)
 {
+	HardManager *hm = HardManager::getInstance();
 	char buf[info->recordLen];
 	int o = 0;
-	*(int*)buf = info->RID;
+    if (newRec)
+        *(int*)buf = info->RID;
+    else
+        *(int*)buf = hm->getInt(page, offset);
 	o += 4;
 	char* nullArray = buf + o;
 	o += info->nullLength;
@@ -81,7 +85,6 @@ void Record::setData(RecordData rd)
 		}
 		o += info->header.getSize(i);
 	}
-	HardManager *hm = HardManager::getInstance();
 	hm->setChars(page, offset, buf, info->recordLen);
 }
 
