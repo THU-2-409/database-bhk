@@ -40,6 +40,7 @@ ByteArray TableInfo:: dump()
     os.putInt(maxPageID);
     os.putInt(dataPageHead);
     // 写完
+    printf("dump_len:%lu - %d\n", os.length(), PAGE_SIZE);
     ByteArray res(buf, os.length());
     return res;
 }
@@ -57,6 +58,7 @@ int TableInfo:: load(char *buf)
     is.getInt(maxPageID);
     is.getInt(dataPageHead);
     // 读完
+    printf("load_len:%lu - %d\n", is.length() + offset, PAGE_SIZE);
     return offset + is.length();
 }
 

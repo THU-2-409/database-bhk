@@ -182,6 +182,12 @@ class RecordData {
     map< string, pair<bool, ByteArray> >::iterator begin() { return m.begin(); }
     map< string, pair<bool, ByteArray> >::iterator end() { return m.end(); }
 
+    RecordData() {}
+    RecordData(const RecordData &other)
+    {
+        m = other.m;
+    }
+
 private:
     map< string, pair<bool, ByteArray> > m;
 };
@@ -260,12 +266,12 @@ bool Table::createFile(TableHeader header, string path)
     if (!hard->open(path)) return false;
     Table table;
     table.info.header = header;
-    if (table.close())
+    int ret;
+    if (ret = table.close())
     {
-        perror("Table close");
+        dperr("Table close(%d)", ret);
         return false;
     }
-    printf("closed\n");
     return true;
 }
 int Table::deleteFile(string path)
@@ -282,7 +288,7 @@ bool Table::open(string path)
 }
 int Table::close()
 {
-    if (!this->info.writeBack()) return 1;
+    if (this->info.writeBack()) return 1;
     HardManager *hard = HardManager::getInstance();
     return hard->close();
 }

@@ -42,16 +42,17 @@ int table_open(Table &table, string path)
 {
     if (!table.open(path))
     {
-        perror("Table open");
+        dperr("Table open");
         return -1;
     }
     return 0;
 }
 int table_close(Table &table)
 {
-    if (table.close())
+    int r;
+    if ((r = table.close()))
     {
-        perror("Table close");
+        dperr("Table close(%d)", r);
         return -1;
     }
     return 0;
@@ -228,6 +229,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
         |   P_UPDATE P_FROM tbName P_SET setClause P_WHERE whereClause
         |   P_SELECT selector P_FROM tableList P_WHERE whereClause
         {
+            printf("fuck\n");
             RecordData eqd;
             vector<WhereC> vcond;
             for (int i = 0; i < $6.wclist.size(); ++i)
@@ -250,6 +252,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                 } else 
                     if (EXPR_VAL == c.exprType) vcond.push_back(c);
             }
+            printf("fuck\n");
             vector<pair<string, RecordData> > meta, res;
             vector<pair<string, string> > colsh;
             vector<int> coltype;
@@ -261,9 +264,10 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                     colsh.push_back(make_pair(string(), $2.clist[i]));
             }
             Table table;
+            printf("fuck\n");
             for (int Ti = 0; Ti < $4.clist.size(); ++Ti)
             {
-                string tb = $4.clist[Ti];
+                string tb = $4.clist[Ti] + "\0";
                 table_open(table, dbPath + "/" + tb);
                 TableHeader &header = table.getHeader();
                 if (allcol)
@@ -291,9 +295,12 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             res = meta;
             // 输出 (! 单表查询)
             for (int i = 0; i < colsh.size(); ++i)
-                printf("%s%s%c", colsh[i].first.c_str(),
-                    colsh[i].second.c_str(), 
-                    (i < colsh.size() - 1) ? '|' : '\n');
+            {
+                printf("fuck\n");
+                printf("%s", colsh[i].first.c_str());
+                printf(".%s", colsh[i].second.c_str());
+                printf("%c", (i < colsh.size() - 1) ? '|' : '\n');
+            }
             for (int i = 0; i < res.size(); ++i)
             {
                 RecordData &data = res[i].second;
@@ -597,3 +604,4 @@ int yywrap()
 {
     return 1;
 }
+// vim: ai
