@@ -49,7 +49,7 @@ int table_open(Table &table, string path)
 }
 int table_close(Table &table)
 {
-    if (!table.close())
+    if (table.close())
     {
         perror("Table close");
         return -1;
@@ -185,10 +185,10 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
         |   P_DESC tbName /* 查看表的schema */
         {
             string path = dbPath + "/" + $2.str;
-            Table table;
-            table_open(table, path);
-            printf("%s\n", table.getSchema().c_str());
-            table_close(table);
+            Table table1;
+            table_open(table1, path);
+            printf("%s\n", table1.getSchema().c_str());
+            table_close(table1);
         }
         |   P_INSERT P_INTO tbName P_VALUES valueLists
         {

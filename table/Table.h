@@ -260,7 +260,12 @@ bool Table::createFile(TableHeader header, string path)
     if (!hard->open(path)) return false;
     Table table;
     table.info.header = header;
-    table.info.writeBack();
+    if (table.close())
+    {
+        perror("Table close");
+        return false;
+    }
+    printf("closed\n");
     return true;
 }
 int Table::deleteFile(string path)
