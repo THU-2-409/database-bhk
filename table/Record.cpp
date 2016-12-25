@@ -12,11 +12,11 @@ bool Record::next()
 }
 
 RecordData Record::getData()
-{
+{	//printf("getData page: %d, offset: %d\n", page, offset);
 	RecordData rd;
 	int o = offset;
 	HardManager *hm = HardManager::getInstance();
-	char* rec = hm->getChars(page, o, info->recordLen); //record
+	char* rec = hm->getChars(page, 0, info->recordLen); //record
 	o += 4;
 	char* nullArray = hm->getChars(page, o, info->nullLength);
 	o += info->nullLength;
@@ -39,6 +39,8 @@ RecordData Record::getData()
 			}
 			else
 			{
+				//printf("id offset %d\n", o);
+				//printf("%s is: %d\n", info->header.getName(i).c_str(), *(int*)(rec + o));
 				ByteArray ba(rec + o, info->header.getSize(i));
 				rd.setBA(info->header.getName(i), ba);	
 			}

@@ -7,14 +7,17 @@ vector<Record> Table::find(RecordData data)
 
 	DataPage dp(info.dataPageHead, this);
 	while(dp.getPageID() != 0)
-	{
+	{ 	printf("in find while loop\n");
 		Record rec = dp.first();
+		printf("rec page: %d, offset: %d\n", rec.getPageID(), rec.getOffset());
 		RecordData rd = rec.getData();
 		map< string, pair<bool, ByteArray> >::iterator it;
 		bool flag = true;
 		for(it = data.begin(); it != data.end(); it++)
 		{
+			printf("col name: %s\n", it->first.c_str());
 			pair<bool, ByteArray> rdata = rd.getBA(it->first);
+			printf("in find for loop: %d\n", *(int*)rdata.second.c_str());
 			if(rdata.first != it->second.first)
 			{
 				flag = false;
