@@ -473,6 +473,7 @@ whereItem   :   col op expr
                 {
                     WhereC wc;
                     wc.type = WC_IS_NULL;
+                    wc.exprType = EXPR_VAL;
                     wc.col = $1.str;
                     $$.wclist.push_back(wc);
                 }
@@ -480,6 +481,7 @@ whereItem   :   col op expr
                 {
                     WhereC wc;
                     wc.type = WC_NOT_NULL;
+                    wc.exprType = EXPR_VAL;
                     wc.col = $1.str;
                     $$.wclist.push_back(wc);
                 }

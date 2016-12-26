@@ -42,15 +42,12 @@ public:
 
     ByteArray & operator = (const ByteArray & src)
     {
-        printf("!%d\n", em);
         if (em) delete[] buf;
-        printf("!\n");
         em = false;
         size = src.size;
         buf = new char[size];
         memcpy(buf, src.buf, size);
         em = true;
-        printf("!\n");
         return *this;
     }
 
