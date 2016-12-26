@@ -222,7 +222,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             table_close(table);
         }
         |   P_UPDATE tbName P_SET setClause P_WHERE whereClause
-        {
+        {   // 需要约束检查 TODO
             string path = dbPath + "/" + $2.str;
             Table table;
             table_open(table, path);
@@ -234,10 +234,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                 if (checkCond(data, $6.wclist))
                 {
                     updateData(data, $4.sclist);
-                    if (checkRecCons(data, table))
-                    {
-                        rs[i].setData(data);
-                    }
+                    rs[i].setData(data);
                 }
             }
             table_close(table);
