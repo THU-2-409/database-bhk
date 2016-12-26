@@ -3,6 +3,13 @@
 
 #include <stdio.h>
 #include <dirent.h>
+#include "../table/Table.h"
+#include <vector>
+#include "Value.h"
+#include "WhereC.h"
+#include "SetC.h"
+
+using namespace std;
 
 void listDirectories()
 {
@@ -58,6 +65,115 @@ void deleteTables(const char* path)
                 perror("remove");
         }
     closedir(dp);
+}
+
+int table_open(Table &table, string path)
+{
+    if (!table.open(path))
+    {
+        dperr("Table open");
+        return -1;
+    }
+    return 0;
+}
+int table_close(Table &table)
+{
+    int r;
+    if ((r = table.close()))
+    {
+        dperr("Table close(%d)", r);
+        return -1;
+    }
+    return 0;
+}
+
+int intcmp(int a, int b)
+{
+    if (a == b) return 0;
+    else return a < b ? -1 : 1;
+}
+// 固定值限制
+bool checkCond(RecordData &data, vector<WhereC> &cond)
+{
+    for (int i = 0, cmp; i < cond.size(); ++i)
+    {
+        bool flag = false;
+        string &col = cond[i].col;
+        if (WC_IS_NULL != cond[i].type && WC_NOT_NULL != cond[i].type)
+        {
+            switch (cond[i].eval.type)
+            {
+                case VAL_INT:
+                    cmp = intcmp(data.getInt(col).second,
+                        cond[i].eval.val);
+                    break;
+                case VAL_STRING:
+                    cmp = data.getString(col).second
+                        .compare(cond[i].eval.str);
+                    break;
+                case VAL_NULL:
+                    break;
+            }
+        }
+        switch (cond[i].type)
+        {
+            case WC_IS_NULL:
+                flag = data.isNULL(col);
+                break;
+            case WC_NOT_NULL:
+                flag = !data.isNULL(col);
+                break;
+            case WC_NOT_EQU:
+                flag = cmp != 0;
+                break;
+            case WC_LEQ:
+                flag = cmp <= 0;
+                break;
+            case WC_GEQ:
+                flag = cmp >= 0;
+                break;
+            case WC_LE:
+                flag = cmp < 0;
+                break;
+            case WC_GR:
+                flag = cmp > 0;
+                break;
+        }
+        if (!flag) return false;
+    }
+    return true;
+}
+
+/*
+ * 滤去等于固定值的条件，产生用于find的集合
+ */
+
+RecordData whereCeqsFilter(vector<WhereC> & wclist)
+{
+    RecordData eqd;
+    vector<WhereC> vcond;
+    for (int i = 0; i < wclist.size(); ++i)
+    {
+        WhereC &c = wclist[i];
+        if (EXPR_VAL == c.exprType && WC_EQU == c.type)
+        {
+            switch (c.eval.type)
+            {
+                case VAL_INT:
+                    eqd.setInt(c.col, c.eval.val);
+                    break;
+                case VAL_STRING:
+                    eqd.setString(c.col, c.eval.str);
+                    break;
+                case VAL_NULL:
+                    eqd.setNULL(c.col);
+                    break;
+            }
+        } else 
+            if (EXPR_VAL == c.exprType) vcond.push_back(c);
+    }
+    wclist.swap(vcond);
+    return eqd;
 }
 
 #endif
