@@ -166,7 +166,9 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                 RecordData data = rs[i].getData();
                 if (checkCond(data, $7.wclist))
                 {
-                    //for ()
+                    updateData(data, $5.sclist);
+                    if (checkRecCons(data, table))
+                        rs[i].setData(data);
                 }
             }
             table_close(table);

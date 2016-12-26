@@ -176,4 +176,14 @@ RecordData whereCeqsFilter(vector<WhereC> & wclist)
     return eqd;
 }
 
+void updateData(RecordData & data, vector<SetC> sclist)
+{
+}
+
+bool checkRecCons(RecordData & data, Table & table)
+{
+    // TODO
+    return true;
+}
+
 #endif
