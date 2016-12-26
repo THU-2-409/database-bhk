@@ -46,7 +46,9 @@ vector<Record> Table::find(RecordData data)
 			}
 			if(flag)
 			{
-				v.push_back(rec);
+                Record tmp(rec.getPageID(), rec.getOffset(),
+                        &info, vector<int>());
+				v.push_back(tmp);
 			}
 			if(rec.next() == false)
 				break;

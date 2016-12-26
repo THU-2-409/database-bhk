@@ -8,6 +8,7 @@
 #include "Value.h"
 #include "WhereC.h"
 #include "SetC.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -104,14 +105,21 @@ bool checkCond(RecordData &data, vector<WhereC> &cond)
             switch (cond[i].eval.type)
             {
                 case VAL_INT:
-                    cmp = intcmp(data.getInt(col).second,
-                        cond[i].eval.val);
+                {
+                    pair<bool,int> t0 = data.getInt(col);
+                    if (!t0.first) return false;
+                    cmp = intcmp(t0.second, cond[i].eval.val);
                     break;
+                }
                 case VAL_STRING:
-                    cmp = data.getString(col).second
-                        .compare(cond[i].eval.str);
+                {
+                    pair<bool,string> t1 = data.getString(col);
+                    if (!t1.first) return false;
+                    cmp = t1.second.compare(cond[i].eval.str);
                     break;
+                }
                 case VAL_NULL:
+                    cmp = 99;
                     break;
             }
         }
@@ -196,12 +204,6 @@ void updateData(RecordData & data, vector<SetC> sclist)
         }
     }
     printf("(%d)r=%s\n", VAL_STRING,data.getString("name").second.c_str());
-}
-
-bool checkRecCons(RecordData & data, Table & table)
-{
-    // TODO
-    return true;
 }
 
 #endif

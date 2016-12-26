@@ -485,6 +485,7 @@ whereItem   :   col op expr
                     wc.type = WC_IS_NULL;
                     wc.exprType = EXPR_VAL;
                     wc.col = $1.str;
+                    wc.eval.type = VAL_NULL;
                     $$.wclist.push_back(wc);
                 }
             |   col P_IS P_NOT P_NULL
@@ -493,6 +494,7 @@ whereItem   :   col op expr
                     wc.type = WC_NOT_NULL;
                     wc.exprType = EXPR_VAL;
                     wc.col = $1.str;
+                    wc.eval.type = VAL_NULL;
                     $$.wclist.push_back(wc);
                 }
             ;
