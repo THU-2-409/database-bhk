@@ -110,7 +110,11 @@ public: // 无需存储又常用的值
     int dataPageRoom;
     int nullLength;
 
+private:
+    int pk_col;
+
 public:
+    int getKey() { return pk_col; }
     int getRecordLen() { return recordLen; }
 };
 
