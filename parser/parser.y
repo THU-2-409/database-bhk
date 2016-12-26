@@ -154,21 +154,27 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             table_close(table);
         }
         |   P_DELETE P_FROM tbName P_WHERE whereClause
-        |   P_UPDATE P_FROM tbName P_SET setClause P_WHERE whereClause
+        |   P_UPDATE tbName P_SET setClause P_WHERE whereClause
         {
-            string path = dbPath + "/" + $3.str;
+            string path = dbPath + "/" + $2.str;
             Table table;
             table_open(table, path);
-            RecordData eqd = whereCeqsFilter($7.wclist);
+            RecordData eqd = whereCeqsFilter($6.wclist);
+            printf("find b\n");
             vector<Record> rs = table.find(eqd);
+            printf("find.\n");
             for (int i = 0; i < rs.size(); ++i)
             {
                 RecordData data = rs[i].getData();
-                if (checkCond(data, $7.wclist))
+                if (checkCond(data, $6.wclist))
                 {
-                    updateData(data, $5.sclist);
+                    updateData(data, $4.sclist);
                     if (checkRecCons(data, table))
+                    {
+                        printf("set =%s\n", data.getString("name").second.c_str());
                         rs[i].setData(data);
+                        printf("set.\n");
+                    }
                 }
             }
             table_close(table);

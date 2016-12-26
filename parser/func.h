@@ -178,6 +178,24 @@ RecordData whereCeqsFilter(vector<WhereC> & wclist)
 
 void updateData(RecordData & data, vector<SetC> sclist)
 {
+    for (int i = 0; i < sclist.size(); ++i)
+    {
+        printf("set %s\n", sclist[i].col.c_str());
+        printf("=%d,%s\n", sclist[i].val.type, sclist[i].val.str.c_str());
+        switch (sclist[i].val.type)
+        {
+            case VAL_STRING:
+                data.setString(sclist[i].col, sclist[i].val.str);
+                break;
+            case VAL_INT:
+                data.setInt(sclist[i].col, sclist[i].val.val);
+                break;
+            case VAL_NULL:
+                data.setNULL(sclist[i].col);
+                break;
+        }
+    }
+    printf("(%d)r=%s\n", VAL_STRING,data.getString("name").second.c_str());
 }
 
 bool checkRecCons(RecordData & data, Table & table)

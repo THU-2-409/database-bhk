@@ -16,14 +16,15 @@ class ByteArray {
 private:
     char *buf;
     int size;
+    bool em;
 public:
     ByteArray()
-        :buf(NULL), size(0)
+        :buf(NULL), size(0), em(false)
     {
     }
 
     ByteArray(const void *src, int size)
-        :size(size)
+        :size(size), em(true)
     {
         //printf("cons %d %d\n",*(int*)src, size);
         assert(size > 0 && size <= BYTEARRAY_MAX_SIZE);
@@ -39,9 +40,24 @@ public:
         memcpy(buf, ori.buf, size);
     }
 
+    ByteArray & operator = (const ByteArray & src)
+    {
+        printf("!%d\n", em);
+        if (em) delete[] buf;
+        printf("!\n");
+        em = false;
+        size = src.size;
+        buf = new char[size];
+        memcpy(buf, src.buf, size);
+        em = true;
+        printf("!\n");
+        return *this;
+    }
+
     ~ByteArray()
     {
         delete[] buf;
+        em = false;
     }
 
     char& operator[] (const int i)
