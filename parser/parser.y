@@ -199,12 +199,12 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             TableHeader & header = table.getHeader();
             for (int k = 0; k < $5.vlists.size(); ++k)
             {
-                printf("1go\n");
+                //printf("1go\n");
                 RecordData tmp;
                 vector<Value> &rda = $5.vlists[k];
                 for (int i = 0; i < rda.size(); ++i)
                 {
-                    printf("2go%d\n", i);
+                    //printf("2go%d\n", i);
                     Value &v = rda[i];
                     string name = header.getName(i);
                     switch (v.type)
@@ -224,7 +224,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                             break;
                     }
                 }
-                printf("3go\n");
+                //printf("3go\n");
                 table.insert(tmp);
             }
             table_close(table);
@@ -233,7 +233,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
         |   P_UPDATE P_FROM tbName P_SET setClause P_WHERE whereClause
         |   P_SELECT selector P_FROM tableList P_WHERE whereClause
         {
-            printf("fuck1\n");
+            //printf("fuck1\n");
             RecordData eqd;
             vector<WhereC> vcond;
             for (int i = 0; i < $6.wclist.size(); ++i)
@@ -259,7 +259,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             /*map< string, pair<bool, ByteArray> >::iterator it;
             for(it = eqd.begin(); it != eqd.end(); it++)
                printf("eqd %d\n", *(int*)(it->second.second.c_str()));*/
-            printf("fuck2\n");
+            //printf("fuck2\n");
             vector<pair<string, RecordData> > meta, res;
             vector<pair<string, string> > colsh;
             vector<int> coltype;
@@ -272,7 +272,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                     colsh.push_back(make_pair(string(), $2.clist[i]));
             }
             Table table;
-            printf("fuck3\n");
+            //printf("fuck3\n");
             for (int Ti = 0; Ti < $4.clist.size(); ++Ti)
             {
                 string tb = $4.clist[Ti] + "\0";
@@ -305,14 +305,14 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             // 联合查询
             res = meta;
             // 输出 (! 单表查询)
-            printf("fuck4\n");
+            //printf("fuck4\n");
             for (int i = 0; i < colsh.size(); ++i)
             {            
                 printf("%s", colsh[i].first.c_str());
                 printf(".%s", colsh[i].second.c_str());
                 printf("%c", (i < colsh.size() - 1) ? '|' : '\n');
             }
-            printf("fuck5\n");
+            //printf("fuck5\n");
             for (int i = 0; i < res.size(); ++i)
             {
                 RecordData &data = res[i].second;
@@ -342,7 +342,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                     printf("%c", (j < colsh.size() - 1) ? '|' : '\n');
                 }
             }
-            printf("fuck6\n");
+            //printf("fuck6\n");
         }
         ;
 
