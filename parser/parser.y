@@ -128,6 +128,25 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                 RecordData tmp;
                 vector<Value> &rda = $5.vlists[k];
 
+                bool flag = true;
+                for (int i = 0; i < rda.size(); ++i)
+                {
+                    //printf("2go%d\n", i);
+                    Value &v = rda[i];
+                    if(v.type == header.getType(i))
+                        continue;
+                    else
+                    {
+                        flag = false;
+                        break;
+                    }
+                }
+                if(!flag)
+                {
+                    printf("record type error, please check your insert\n");
+                    continue;
+                }
+
                 TableInfo & info = table.getInfo();
                 int keyID = info.getKey();
                 printf("keyID: %d\n", keyID);
