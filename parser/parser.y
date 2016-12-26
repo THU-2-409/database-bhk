@@ -73,6 +73,7 @@ dbStmt  :   P_CREATE P_DATABASE dbName
         |   P_DROP P_DATABASE dbName
         {
             if ($3.str == dbPath) dbPath = string(".");
+            deleteTables($3.str.c_str());
             if (rmdir($3.str.c_str()))
             {
                 perror("rmdir err");
@@ -126,6 +127,54 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                 //printf("1go\n");
                 RecordData tmp;
                 vector<Value> &rda = $5.vlists[k];
+
+                bool flag = true;
+                for (int i = 0; i < rda.size(); ++i)
+                {
+                    //printf("2go%d\n", i);
+                    Value &v = rda[i];
+                    switch(v.type)
+                    {
+                        case VAL_INT:
+                            if(header.getType(i) != COL_TYPE_VINT)
+                                flag = false;
+                            break;
+                        case VAL_STRING:
+                            if(header.getType(i) != COL_TYPE_VSTR)
+                                flag = false;
+                            break;
+                    }
+                    if(!flag)
+                        break;
+                }
+                if(!flag)
+                {
+                    printf("record type error, please check your insert\n");
+                    continue;
+                }
+
+                TableInfo & info = table.getInfo();
+                int keyID = info.getKey();
+                printf("keyID: %d\n", keyID);
+                if(keyID != -1)
+                {
+                    switch (rda[keyID].type)
+                    {
+                        case VAL_INT:
+                            tmp.setInt(header.getName(keyID), rda[keyID].val);
+                            break;
+                        case VAL_STRING:
+                            tmp.setString(header.getName(keyID), rda[keyID].str);
+                            break;
+                    }
+                    vector<Record> temp = table.find(tmp);
+                    if(temp.size() > 0)
+                    {
+                        printf("record's primary key already exist\n");
+                        continue;
+                    }
+                }
+
                 for (int i = 0; i < rda.size(); ++i)
                 {
                     //printf("2go%d\n", i);
@@ -149,6 +198,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                     }
                 }
                 //printf("3go\n");
+                
                 table.insert(tmp);
             }
             table_close(table);
