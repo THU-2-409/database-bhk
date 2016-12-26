@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <cstring>
 #include <cerrno>
+#include <stdio.h>
 
 /* ByteArray
  * 字节数组封装
@@ -24,9 +25,11 @@ public:
     ByteArray(const void *src, int size)
         :size(size)
     {
+        //printf("cons %d %d\n",*(int*)src, size);
         assert(size > 0 && size <= BYTEARRAY_MAX_SIZE);
         buf = new char[size];
         memcpy(buf, src, size);
+        //printf("cons end %d %d\n",*(int*)buf, size);
     }
 
     ByteArray(const ByteArray &ori)

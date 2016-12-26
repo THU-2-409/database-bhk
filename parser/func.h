@@ -39,4 +39,25 @@ void listTables(const char * path)
     closedir(dp);
 }
 
+void deleteTables(const char* path)
+{
+    DIR *dp = opendir(path);
+    if (NULL == dp)
+    {
+        perror("opendir");
+        return ;
+    }
+    struct dirent * dirp;
+    while ((dirp = readdir(dp)) != NULL)
+        if (8 == dirp->d_type)
+        {
+            string f = path;
+            f += "/";
+            f += dirp->d_name;
+            if(remove(f.c_str()))
+                perror("remove");
+        }
+    closedir(dp);
+}
+
 #endif
