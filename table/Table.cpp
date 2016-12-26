@@ -9,42 +9,47 @@ vector<Record> Table::find(RecordData data)
 	while(dp.getPageID() != 0)
 	{ 	printf("in find while loop\n");
 		Record rec = dp.first();
-		printf("rec page: %d, offset: %d\n", rec.getPageID(), rec.getOffset());
-		RecordData rd = rec.getData();
-		map< string, pair<bool, ByteArray> >::iterator it;
-		bool flag = true;
-		for(it = data.begin(); it != data.end(); it++)
+		while(true)
 		{
-			printf("col name: %s\n", it->first.c_str());
-			pair<bool, ByteArray> rdata = rd.getBA(it->first);
-			printf("in find for loop: %d\n", *(int*)rdata.second.c_str());
-			if(rdata.first != it->second.first)
+			printf("rec page: %d, offset: %d\n", rec.getPageID(), rec.getOffset());
+			RecordData rd = rec.getData();
+			map< string, pair<bool, ByteArray> >::iterator it;
+			bool flag = true;
+			for(it = data.begin(); it != data.end(); it++)
 			{
-				flag = false;
+				printf("col name: %s\n", it->first.c_str());
+				pair<bool, ByteArray> rdata = rd.getBA(it->first);
+				printf("in find for loop: %d\n", *(int*)rdata.second.c_str());
+				if(rdata.first != it->second.first)
+				{
+					flag = false;
+					break;
+				}
+				if(!rdata.first) continue;
+				int type = info.header.getType(it->first);
+				if(type == COL_TYPE_VINT)
+				{
+					if(rdata.second.intCmp(it->second.second))
+					{
+						flag = false;
+						break;
+					}
+				}
+				else
+				{
+					if(rdata.second.strCmp(it->second.second))
+					{
+						flag = false;
+						break;
+					}
+				}
+			}
+			if(flag)
+			{
+				v.push_back(rec);
+			}
+			if(rec.next() == false)
 				break;
-			}
-			if(!rdata.first) continue;
-			int type = info.header.getType(it->first);
-			if(type == COL_TYPE_VINT)
-			{
-				if(rdata.second.intCmp(it->second.second))
-				{
-					flag = false;
-					break;
-				}
-			}
-			else
-			{
-				if(rdata.second.strCmp(it->second.second))
-				{
-					flag = false;
-					break;
-				}
-			}
-		}
-		if(flag)
-		{
-			v.push_back(rec);
 		}
 		dp = dp.next();
 	}
