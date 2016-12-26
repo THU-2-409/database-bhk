@@ -13,6 +13,7 @@ ByteArray TableHeader:: dump()
         os.putString(getName(i));
         os.putInt(getSize(i));
         os.putInt(getType(i));
+        os.putInt(getConstraint(i));
     }
     // 写完
     ByteArray res(buf, os.length());
@@ -34,6 +35,7 @@ int TableHeader:: load(char *buf)
         is.getString(defs[i].name);
         is.getInt(defs[i].size);
         is.getInt(defs[i].type);
+        is.getInt(defs[i].constraint);
         dict[defs[i].name] = i;
     }
     return is.length();

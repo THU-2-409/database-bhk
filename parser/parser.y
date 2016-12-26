@@ -73,6 +73,7 @@ dbStmt  :   P_CREATE P_DATABASE dbName
         |   P_DROP P_DATABASE dbName
         {
             if ($3.str == dbPath) dbPath = string(".");
+            deleteTables($3.str.c_str());
             if (rmdir($3.str.c_str()))
             {
                 perror("rmdir err");
@@ -127,7 +128,9 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                 RecordData tmp;
                 vector<Value> &rda = $5.vlists[k];
 
-                int keyID = table.info.getKey();
+                TableInfo & info = table.getInfo();
+                int keyID = info.getKey();
+                printf("keyID: %d\n", keyID);
                 if(keyID != -1)
                 {
                     switch (rda[keyID].type)

@@ -235,6 +235,7 @@ public:
     void insert(RecordData data);
     vector<Record> find(RecordData data);
 
+    TableInfo & getInfo() { return info; }
     TableHeader & getHeader() { return info.header; }
     string getSchema();
 
