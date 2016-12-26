@@ -278,36 +278,55 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             TableHeader & header = table.getHeader();
             TableInfo & info = table.getInfo();
             int keyID = info.getKey();
-            string keyname = header.getName(keyID);
-            bool setkey = false;
-            int size = $4.sclist.size();
-            for (int i = 0; i < size; ++i)
+            if(keyID != -1)
             {
-                if($4.sclist[i].col == keyname)
+                string keyname = header.getName(keyID);
+                bool setkey = false;
+                int size = $4.sclist.size();
+                for (int i = 0; i < size; ++i)
                 {
-                    setkey = true;
-                    break;
+                    if($4.sclist[i].col == keyname)
+                    {
+                        setkey = true;
+                        break;
+                    }
                 }
-            }
-
-            RecordData eqd = whereCeqsFilter($6.wclist);
-            vector<Record> rs = table.find(eqd);
-            if(setkey && rs.size() > 1)
-            {
-                printf("set two or more record the same primary key\n");
+                RecordData eqd = whereCeqsFilter($6.wclist);
+                vector<Record> rs = table.find(eqd);
+                if(setkey && rs.size() > 1)
+                {
+                    printf("set two or more record the same primary key\n");
+                }
+                else
+                {
+                    for (int i = 0; i < rs.size(); ++i)
+                    {
+                        RecordData data = rs[i].getData();
+                        if (checkCond(data, $6.wclist))
+                        {
+                            if(updateData(data, $4.sclist, header))
+                                rs[i].setData(data);
+                        }
+                    }
+                }
             }
             else
             {
+                RecordData eqd = whereCeqsFilter($6.wclist);
+                vector<Record> rs = table.find(eqd);
                 for (int i = 0; i < rs.size(); ++i)
                 {
                     RecordData data = rs[i].getData();
                     if (checkCond(data, $6.wclist))
                     {
-                        updateData(data, $4.sclist);
-                        rs[i].setData(data);
+                        if(updateData(data, $4.sclist, header))
+                            rs[i].setData(data);
                     }
                 }
             }
+            
+
+            
             table_close(table);
         }
         |   P_SELECT selector P_FROM tableList P_WHERE whereClause

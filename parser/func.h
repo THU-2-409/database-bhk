@@ -8,7 +8,6 @@
 #include "Value.h"
 #include "WhereC.h"
 #include "SetC.h"
-#include <algorithm>
 
 using namespace std;
 
@@ -105,21 +104,14 @@ bool checkCond(RecordData &data, vector<WhereC> &cond)
             switch (cond[i].eval.type)
             {
                 case VAL_INT:
-                {
-                    pair<bool,int> t0 = data.getInt(col);
-                    if (!t0.first) return false;
-                    cmp = intcmp(t0.second, cond[i].eval.val);
+                    cmp = intcmp(data.getInt(col).second,
+                        cond[i].eval.val);
                     break;
-                }
                 case VAL_STRING:
-                {
-                    pair<bool,string> t1 = data.getString(col);
-                    if (!t1.first) return false;
-                    cmp = t1.second.compare(cond[i].eval.str);
+                    cmp = data.getString(col).second
+                        .compare(cond[i].eval.str);
                     break;
-                }
                 case VAL_NULL:
-                    cmp = 99;
                     break;
             }
         }
@@ -184,8 +176,9 @@ RecordData whereCeqsFilter(vector<WhereC> & wclist)
     return eqd;
 }
 
-void updateData(RecordData & data, vector<SetC> sclist)
+bool updateData(RecordData & data, vector<SetC> sclist, TableHeader th)
 {
+    bool nullflag = true;
     for (int i = 0; i < sclist.size(); ++i)
     {
         printf("set %s\n", sclist[i].col.c_str());
@@ -199,11 +192,29 @@ void updateData(RecordData & data, vector<SetC> sclist)
                 data.setInt(sclist[i].col, sclist[i].val.val);
                 break;
             case VAL_NULL:
-                data.setNULL(sclist[i].col);
+                //printf("col %d\n",th.getCol(sclist[i].col));
+                if(th.getConstraint(th.getCol(sclist[i].col)) != COL_REG_T)
+                {
+                    nullflag = false;
+                    printf("record field can't set null\n");
+                }
+                else
+                {
+                    data.setNULL(sclist[i].col);
+                }
                 break;
         }
+        if(!nullflag)
+            break;
     }
     printf("(%d)r=%s\n", VAL_STRING,data.getString("name").second.c_str());
+    return nullflag;
+}
+
+bool checkRecCons(RecordData & data, Table & table)
+{
+    // TODO
+    return true;
 }
 
 #endif
