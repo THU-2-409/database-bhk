@@ -270,7 +270,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             table_close(table);
         }
         |   P_UPDATE tbName P_SET setClause P_WHERE whereClause
-        {   // 需要约束检查 TODO
+        {
             string path = dbPath + "/" + $2.str;
             Table table;
             table_open(table, path);
@@ -278,55 +278,59 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             TableHeader & header = table.getHeader();
             TableInfo & info = table.getInfo();
             int keyID = info.getKey();
-            if(keyID != -1)
+            // 非空检查
+            bool nullerr = false, errhalt = false, set_pk = false;
+            for (int i = 0; i < $4.sclist.size(); ++i)
             {
-                string keyname = header.getName(keyID);
-                bool setkey = false;
-                int size = $4.sclist.size();
-                for (int i = 0; i < size; ++i)
-                {
-                    if($4.sclist[i].col == keyname)
+                int ty = header.getConstraint($4.sclist[i].col);
+                if (COL_NOT_NULL_T == ty || COL_KEY_T == ty)
+                    if (VAL_NULL == $4.sclist[i].val.type)
                     {
-                        setkey = true;
+                        errhalt = nullerr = true;
+                        break;
+                    }
+                if (COL_KEY_T == ty) 
+                {
+                    set_pk = true;
+                    RecordData pks = genPKupdCheck($4.sclist[i]);
+                    vector<Record> vec = table.find(pks);
+                    if (vec.size())
+                    {
+                        errhalt = true;
+                        printf("error: Primary Key Constraint\n");
                         break;
                     }
                 }
-                RecordData eqd = whereCeqsFilter($6.wclist);
-                vector<Record> rs = table.find(eqd);
-                if(setkey && rs.size() > 1)
-                {
-                    printf("set two or more record the same primary key\n");
-                }
-                else
-                {
-                    for (int i = 0; i < rs.size(); ++i)
-                    {
-                        RecordData data = rs[i].getData();
-                        if (checkCond(data, $6.wclist))
-                        {
-                            if(updateData(data, $4.sclist, header))
-                                rs[i].setData(data);
-                        }
-                    }
-                }
             }
-            else
+            if (nullerr) printf("error: NULL Constraint\n");
+            if (errhalt) 
             {
-                RecordData eqd = whereCeqsFilter($6.wclist);
-                vector<Record> rs = table.find(eqd);
-                for (int i = 0; i < rs.size(); ++i)
+                table_close(table);
+                break;
+            }
+            RecordData eqd = whereCeqsFilter($6.wclist);
+            vector<Record> rs = table.find(eqd);
+            vector<Record> res;
+            for (int i = 0; i < rs.size(); ++i)
+            {
+                RecordData data = rs[i].getData();
+                if (checkCond(data, $6.wclist))
                 {
-                    RecordData data = rs[i].getData();
-                    if (checkCond(data, $6.wclist))
-                    {
-                        if(updateData(data, $4.sclist, header))
-                            rs[i].setData(data);
-                    }
+                    res.push_back(rs[i]);
                 }
             }
-            
-
-            
+            if (res.size() > 1 && set_pk)
+            {
+                printf("error: Primary Key Constraint\n");
+                table_close(table);
+                break;
+            }
+            for (int i = 0; i < res.size(); ++i)
+            {
+                RecordData data = res[i].getData();
+                updateData(data, $4.sclist);
+                res[i].setData(data);
+            }
             table_close(table);
         }
         |   P_SELECT selector P_FROM tableList P_WHERE whereClause

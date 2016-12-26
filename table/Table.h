@@ -51,6 +51,8 @@ public:
     int getConstraint(int col) const { return defs.at(col).constraint; }
     int getCol(string name) { return dict[name]; }
     int getType(string name) { return getType(getCol(name)); }
+    int getConstraint(string name)
+        { return getConstraint(getCol(name)); }
     
     ByteArray dump();
     int load(char*);
