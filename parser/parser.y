@@ -129,10 +129,10 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             //printf("keyID: %d\n", keyID);
             set<int> ikey;
             set<string> skey;
-            int keytype = header.getType(keyID);
-            string keyname = header.getName(keyID);
             if(keyID != -1)
             { 
+                int keytype = header.getType(keyID);
+                string keyname = header.getName(keyID);
                 RecordData rdtemp;
                 vector<Record> temp = table.find(rdtemp);
                 int size = temp.size();
@@ -187,6 +187,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
 
                 if(keyID != -1)
                 {
+                    int keytype = header.getType(keyID);
                     if(keytype == COL_TYPE_VINT)
                     {
                         if(ikey.find(rda[keyID].val) != ikey.end())
@@ -209,6 +210,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                     }
                 }
 
+                bool nullflag = true;
                 for (int i = 0; i < rda.size(); ++i)
                 {
                     //printf("2go%d\n", i);
@@ -227,11 +229,23 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                             //printf("set %s\n", tmp.getString(name).second.c_str());
                             break;
                         case VAL_NULL:
-                            tmp.setNULL(name);
+                            if(header.getConstraint(i) != COL_REG_T)
+                            {
+                                nullflag = false;
+                                printf("record field can't set null\n");
+                            }
+                            else
+                            {
+                                tmp.setNULL(name);
+                            }
                             break;
                     }
+                    if(!nullflag)
+                        break;
                 }
                 //printf("3go\n");
+                if(!nullflag)
+                    continue;
                 
                 table.insert(tmp);
             }
@@ -542,7 +556,6 @@ whereItem   :   col op expr
                     wc.type = WC_IS_NULL;
                     wc.exprType = EXPR_VAL;
                     wc.col = $1.str;
-                    wc.eval.type = VAL_NULL;
                     $$.wclist.push_back(wc);
                 }
             |   col P_IS P_NOT P_NULL
@@ -551,7 +564,6 @@ whereItem   :   col op expr
                     wc.type = WC_NOT_NULL;
                     wc.exprType = EXPR_VAL;
                     wc.col = $1.str;
-                    wc.eval.type = VAL_NULL;
                     $$.wclist.push_back(wc);
                 }
             ;
