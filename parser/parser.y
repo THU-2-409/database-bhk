@@ -333,31 +333,8 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
         {
             //printf("fuck1\n");
             RecordData eqd;
-            vector<WhereC> vcond;
-            for (int i = 0; i < $6.wclist.size(); ++i)
-            {
-                WhereC &c = $6.wclist[i];
-                if (EXPR_VAL == c.exprType && WC_EQU == c.type)
-                {
-                    switch (c.eval.type)
-                    {
-                        case VAL_INT:
-                            eqd.setInt(c.col, c.eval.val);
-                            break;
-                        case VAL_STRING:
-                            eqd.setString(c.col, c.eval.str);
-                            break;
-                        case VAL_NULL:
-                            eqd.setNULL(c.col);
-                            break;
-                    }
-                } else 
-                    if (EXPR_VAL == c.exprType) vcond.push_back(c);
-            }
-            /*map< string, pair<bool, ByteArray> >::iterator it;
-            for(it = eqd.begin(); it != eqd.end(); it++)
-               printf("eqd %d\n", *(int*)(it->second.second.c_str()));*/
-            //printf("fuck2\n");
+            vector<WhereC> & vcond = $6.wclist;
+            eqd = whereCeqsFilter(vcond);
             vector<pair<string, RecordData> > meta, res;
             vector<pair<string, string> > colsh;
             vector<int> coltype;
