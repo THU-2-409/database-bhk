@@ -7,6 +7,7 @@
 #include "WhereC.h"
 #include "SetC.h"
 #include "func.h"
+#include <set>
 struct yyStruType
 {
     int type;
@@ -122,6 +123,37 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             Table table;
             table_open(table, path);
             TableHeader & header = table.getHeader();
+
+            TableInfo & info = table.getInfo();
+            int keyID = info.getKey();
+            //printf("keyID: %d\n", keyID);
+            set<int> ikey;
+            set<string> skey;
+            int keytype = header.getType(keyID);
+            string keyname = header.getName(keyID);
+            if(keyID != -1)
+            { 
+                RecordData rdtemp;
+                vector<Record> temp = table.find(rdtemp);
+                int size = temp.size();
+                if(keytype == COL_TYPE_VINT)
+                {
+                    for(int i = 0; i < size; i++)
+                    {
+                        RecordData rd = temp[i].getData();
+                        ikey.insert(rd.getInt(keyname).second);
+                    }
+                }
+                else
+                {
+                    for(int i = 0; i < size; i++)
+                    {
+                        RecordData rd = temp[i].getData();
+                        skey.insert(rd.getString(keyname).second);
+                    }
+                }             
+            }
+
             for (int k = 0; k < $5.vlists.size(); ++k)
             {
                 //printf("1go\n");
@@ -153,25 +185,27 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                     continue;
                 }
 
-                TableInfo & info = table.getInfo();
-                int keyID = info.getKey();
-                printf("keyID: %d\n", keyID);
                 if(keyID != -1)
                 {
-                    switch (rda[keyID].type)
+                    if(keytype == COL_TYPE_VINT)
                     {
-                        case VAL_INT:
-                            tmp.setInt(header.getName(keyID), rda[keyID].val);
-                            break;
-                        case VAL_STRING:
-                            tmp.setString(header.getName(keyID), rda[keyID].str);
-                            break;
+                        if(ikey.find(rda[keyID].val) != ikey.end())
+                        {
+                            printf("record's primary key already exist\n");
+                            continue;                      
+                        }
+                        else
+                            ikey.insert(rda[keyID].val);   
                     }
-                    vector<Record> temp = table.find(tmp);
-                    if(temp.size() > 0)
+                    else
                     {
-                        printf("record's primary key already exist\n");
-                        continue;
+                        if(skey.find(rda[keyID].str) != skey.end())
+                        {
+                            printf("record's primary key already exist\n");
+                            continue;                      
+                        }
+                        else
+                            skey.insert(rda[keyID].str);  
                     }
                 }
 
@@ -226,15 +260,38 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             string path = dbPath + "/" + $2.str;
             Table table;
             table_open(table, path);
+
+            TableHeader & header = table.getHeader();
+            TableInfo & info = table.getInfo();
+            int keyID = info.getKey();
+            string keyname = header.getName(keyID);
+            bool setkey = false;
+            int size = $4.sclist.size();
+            for (int i = 0; i < size; ++i)
+            {
+                if($4.sclist[i].col == keyname)
+                {
+                    setkey = true;
+                    break;
+                }
+            }
+
             RecordData eqd = whereCeqsFilter($6.wclist);
             vector<Record> rs = table.find(eqd);
-            for (int i = 0; i < rs.size(); ++i)
+            if(setkey && rs.size() > 1)
             {
-                RecordData data = rs[i].getData();
-                if (checkCond(data, $6.wclist))
+                printf("set two or more record the same primary key\n");
+            }
+            else
+            {
+                for (int i = 0; i < rs.size(); ++i)
                 {
-                    updateData(data, $4.sclist);
-                    rs[i].setData(data);
+                    RecordData data = rs[i].getData();
+                    if (checkCond(data, $6.wclist))
+                    {
+                        updateData(data, $4.sclist);
+                        rs[i].setData(data);
+                    }
                 }
             }
             table_close(table);
