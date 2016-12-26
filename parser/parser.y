@@ -202,6 +202,27 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                 //printf("1go\n");
                 RecordData tmp;
                 vector<Value> &rda = $5.vlists[k];
+
+                int keyID = table.info.getKey();
+                if(keyID != -1)
+                {
+                    switch (rda[keyID].type)
+                    {
+                        case VAL_INT:
+                            tmp.setInt(header.getName(keyID), rda[keyID].val);
+                            break;
+                        case VAL_STRING:
+                            tmp.setString(header.getName(keyID), rda[keyID].str);
+                            break;
+                    }
+                    vector<Record> temp = table.find(tmp);
+                    if(temp.size() > 0)
+                    {
+                        printf("record's primary key already exist\n");
+                        continue;
+                    }
+                }
+
                 for (int i = 0; i < rda.size(); ++i)
                 {
                     //printf("2go%d\n", i);
@@ -225,6 +246,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                     }
                 }
                 //printf("3go\n");
+                
                 table.insert(tmp);
             }
             table_close(table);
