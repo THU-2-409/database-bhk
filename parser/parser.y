@@ -133,13 +133,19 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                 {
                     //printf("2go%d\n", i);
                     Value &v = rda[i];
-                    if(v.type == header.getType(i))
-                        continue;
-                    else
+                    switch(v.type)
                     {
-                        flag = false;
-                        break;
+                        case VAL_INT:
+                            if(header.getType(i) != COL_TYPE_VINT)
+                                flag = false;
+                            break;
+                        case VAL_STRING:
+                            if(header.getType(i) != COL_TYPE_VSTR)
+                                flag = false;
+                            break;
                     }
+                    if(!flag)
+                        break;
                 }
                 if(!flag)
                 {
