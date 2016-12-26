@@ -75,6 +75,14 @@ void TableInfo:: make()
 
     int ret = PAGE_SIZE - 4;
     dataPageRoom = (ret - 2) / (res + 2);
+
+    pk_col = -1;
+    for (int i = 0; i < cnt; ++i)
+        if (header.getConstraint(i) == COL_KEY_T)
+        {
+            pk_col = i;
+            break;
+        }
 }
 
 #endif

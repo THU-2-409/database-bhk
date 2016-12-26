@@ -2,11 +2,11 @@
 #include <stdio.h>
 #include <string>
 #include "../table/Table.h"
-#include "func.h"
 #include <vector>
 #include "Value.h"
 #include "WhereC.h"
 #include "SetC.h"
+#include "func.h"
 struct yyStruType
 {
     int type;
@@ -38,82 +38,6 @@ void yyerror(const char* s);
 #include "lex.yy.c"
 int yyparse(void);
 
-int table_open(Table &table, string path)
-{
-    if (!table.open(path))
-    {
-        dperr("Table open");
-        return -1;
-    }
-    return 0;
-}
-int table_close(Table &table)
-{
-    int r;
-    if ((r = table.close()))
-    {
-        dperr("Table close(%d)", r);
-        return -1;
-    }
-    return 0;
-}
-
-int intcmp(int a, int b)
-{
-    if (a == b) return 0;
-    else return a < b ? -1 : 1;
-}
-// 固定值限制
-bool checkCond(RecordData &data, vector<WhereC> &cond)
-{
-    for (int i = 0, cmp; i < cond.size(); ++i)
-    {
-        bool flag = false;
-        string &col = cond[i].col;
-        if (WC_IS_NULL != cond[i].type && WC_NOT_NULL != cond[i].type)
-        {
-            switch (cond[i].eval.type)
-            {
-                case VAL_INT:
-                    cmp = intcmp(data.getInt(col).second,
-                        cond[i].eval.val);
-                    break;
-                case VAL_STRING:
-                    cmp = data.getString(col).second
-                        .compare(cond[i].eval.str);
-                    break;
-                case VAL_NULL:
-                    break;
-            }
-        }
-        switch (cond[i].type)
-        {
-            case WC_IS_NULL:
-                flag = data.isNULL(col);
-                break;
-            case WC_NOT_NULL:
-                flag = !data.isNULL(col);
-                break;
-            case WC_NOT_EQU:
-                flag = cmp != 0;
-                break;
-            case WC_LEQ:
-                flag = cmp <= 0;
-                break;
-            case WC_GEQ:
-                flag = cmp >= 0;
-                break;
-            case WC_LE:
-                flag = cmp < 0;
-                break;
-            case WC_GR:
-                flag = cmp > 0;
-                break;
-        }
-        if (!flag) return false;
-    }
-    return true;
-}
 %}
 %token P_DATABASE P_DATABASES   P_TABLE   P_TABLES  P_SHOW    P_CREATE
 %token P_DROP P_USE P_PRIMARY P_KEY P_NOT P_NULL
@@ -253,6 +177,22 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
         }
         |   P_DELETE P_FROM tbName P_WHERE whereClause
         |   P_UPDATE P_FROM tbName P_SET setClause P_WHERE whereClause
+        {
+            string path = dbPath + "/" + $3.str;
+            Table table;
+            table_open(table, path);
+            RecordData eqd = whereCeqsFilter($7.wclist);
+            vector<Record> rs = table.find(eqd);
+            for (int i = 0; i < rs.size(); ++i)
+            {
+                RecordData data = rs[i].getData();
+                if (checkCond(data, $7.wclist))
+                {
+                    //for ()
+                }
+            }
+            table_close(table);
+        }
         |   P_SELECT selector P_FROM tableList P_WHERE whereClause
         {
             //printf("fuck1\n");
