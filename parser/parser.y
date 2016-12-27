@@ -123,7 +123,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             table_close(table1);
         }
         |   P_INSERT P_INTO tbName P_VALUES valueLists
-        {
+        {   //printf("insert data ok %d\n", (int)$5.vlists.size());
             string path = dbPath + "/" + $3.str;
             Table table;
             table_open(table, path);
@@ -251,7 +251,7 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                 //printf("3go\n");
                 if(!nullflag)
                     continue;
-                
+                //printf("%d ", k);
                 table.insert(tmp);
             }
             table_close(table);
@@ -485,7 +485,7 @@ type        :   P_INT '(' VALUE_INT ')'
                     $$.val = $3.val;
                     $$.type = COL_TYPE_VSTR;
                     char buf[32];
-                    sprintf(buf, "CHAR(%d)", $3.val);
+                    sprintf(buf, "VARCHAR(%d)", $3.val);
                     $$.str = string(buf);
                 }
             ;

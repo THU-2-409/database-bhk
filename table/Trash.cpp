@@ -60,7 +60,7 @@ DataPage Trash:: allocPage()
         int &nextOffset = table->info.nextNewRecOffset;
         h->setInt(ret, offset, nextPage);
         short tmp = nextOffset;
-        h->setChars(ret, offset, &tmp, 2);
+        h->setChars(ret, offset + 4, &tmp, 2);
         tmp = -1;
         h->setChars(ret, PAGE_SIZE - 2, &tmp, 2);
         // rec链表头维护
