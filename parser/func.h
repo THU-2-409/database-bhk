@@ -95,12 +95,14 @@ int intcmp(int a, int b)
     else return a < b ? -1 : 1;
 }
 // 固定值限制
-bool checkCond(RecordData &data, vector<WhereC> &cond)
+bool checkCond(RecordData &data,
+        vector<WhereC> &cond,
+        bool sel2 = false)
 {
     for (int i = 0, cmp; i < cond.size(); ++i)
     {
         bool flag = false;
-        string &col = cond[i].col;
+        string &col = sel2 ? cond[i].lcol.second : cond[i].col;
         pair<bool, int> t0;
         pair<bool, string> t1;
         if (WC_IS_NULL != cond[i].type && WC_NOT_NULL != cond[i].type)
@@ -299,6 +301,208 @@ void printRecData(RecordData & data,
                     break;
             }
         }
+}
+
+void _fixSharp(ColStr & wc, TableHeader & h, string & tb)
+{
+    if (wc.first == "#" && h.hasName(wc.second))
+        wc.first = tb;
+}
+
+void fixSharpWc(vector<WhereC> & wclist,
+        vector<TableHeader> & hs,
+        vector<string> & tbnames)
+{
+    for (int i = 0; i < hs.size(); ++i)
+    {
+        for (int j = 0; j < wclist.size(); ++j)
+        {
+            _fixSharp(wclist[j].lcol, hs[i], tbnames[i]);
+            _fixSharp(wclist[j].rcol, hs[i], tbnames[i]);
+        }
+    }
+}
+
+RecordData eqfilter(vector<WhereC> & wclist, string tb)
+{
+    RecordData res;
+    for (int i = 0; i < wclist.size(); ++i)
+    {
+        if (EXPR_VAL == wclist[i].exprType &&
+                WC_EQU == wclist[i].type &&
+                tb == wclist[i].lcol.first)
+        {
+            switch (wclist[i].eval.type)
+            {
+                case VAL_INT:
+                    res.setInt(wclist[i].lcol.second,
+                            wclist[i].eval.val);
+                    break;
+                case VAL_STRING:
+                    res.setString(wclist[i].lcol.second,
+                            wclist[i].eval.str);
+                    break;
+                case VAL_NULL:
+                    res.setNULL(wclist[i].lcol.second);
+                    break;
+            }
+        }
+    }
+    return res;
+}
+
+vector<WhereC> nefilter(vector<WhereC> wclist, string tb)
+{
+    vector<WhereC> res;
+    for (int i = 0; i < wclist.size(); ++i)
+    {
+        if (EXPR_VAL == wclist[i].exprType &&
+                tb == wclist[i].lcol.first &&
+                WC_EQU != wclist[i].type)
+        {
+            res.push_back(wclist[i]);
+        }
+    }
+    return res;
+}
+
+vector<RecordData> find2(Table & table,
+        vector<WhereC> wclist,
+        string tb)
+{
+    RecordData eqd = eqfilter(wclist, tb);
+    vector<Record> meta = table.find(eqd);
+    vector<WhereC> cond = nefilter(wclist, tb);
+    vector<RecordData> res;
+    for (int i = 0; i < meta.size(); ++i)
+    {
+        RecordData data = meta[i].getData();
+        if (checkCond(data, cond, true))
+            res.push_back(data);
+    }
+    return res;
+}
+
+vector<WhereC> uofilter(vector<WhereC> wclist)
+{
+    vector<WhereC> res;
+    for (int i = 0; i < wclist.size(); ++i)
+        if (EXPR_COL == wclist[i].exprType)
+            res.push_back(wclist[i]);
+    return res;
+}
+
+vector<int> gCondType(vector<WhereC> wclist,
+        vector<TableHeader> & hs,
+        vector<string> & tbnames)
+{
+    vector<int> res;
+    for (int i = 0; i < wclist.size(); ++i)
+        for (int j = 0; j < hs.size(); ++j)
+            if (tbnames[j] == wclist[i].lcol.first)
+            {
+                res.push_back(hs[j].getType(wclist[i].lcol.second));
+                break;
+            }
+    return res;
+}
+
+bool checkUnion(RecordData & d0, RecordData & d1,
+        vector<WhereC> & cond,
+        vector<int> & type,
+        vector<string> & tbs)
+{
+    pair<bool, ByteArray> t0, t1;
+    RecordData *lp, *rp;
+    for (int i = 0, cmp; i < cond.size(); ++i)
+    {
+        if (cond[i].lcol.first == tbs[0])
+        {
+            lp = &d0;
+            rp = &d1;
+        }
+        else
+        {
+            lp = &d1;
+            rp = &d0;
+        }
+        t0 = lp->getBA(cond[i].lcol.second);
+        t1 = rp->getBA(cond[i].rcol.second);
+        if (!t0.first || !t1.first) return false;
+        switch (type[i])
+        {
+            case COL_TYPE_VINT:
+                cmp = t0.second.intCmp(t1.second);
+                break;
+            case COL_TYPE_VSTR:
+                cmp = t0.second.strCmp(t1.second);
+                break;
+            default:
+                printf("Error col type!\n");
+                return false;
+        }
+        bool flag;
+        switch (cond[i].type)
+        {
+            case WC_EQU:
+                flag = cmp == 0;
+                break;
+            case WC_NOT_EQU:
+                flag = cmp != 0;
+                break;
+            case WC_LEQ:
+                flag = cmp <= 0;
+                break;
+            case WC_GEQ:
+                flag = cmp >= 0;
+                break;
+            case WC_LE:
+                flag = cmp < 0;
+                break;
+            case WC_GR:
+                flag = cmp > 0;
+                break;
+            case WC_IS_NULL:
+            case WC_NOT_NULL:
+            default:
+                printf("Error wc type!\n");
+                return false;
+        }
+        if (!flag) return false;
+    }
+    return true;
+}
+
+void printUni(RecordData & d0, RecordData & d1,
+        vector<ColStr> & pcs,
+        vector<int> & ptype,
+        vector<string> & tbs)
+{
+    RecordData * p;
+    for (int i = 0; i < pcs.size(); ++i)
+    {
+        p = tbs[0] == pcs[i].first ? &d0 : &d1;
+        if (p->isNULL(pcs[i].second))
+        {
+            PrintWg::pw("NULL");
+            continue;
+        }
+        switch (ptype[i])
+        {
+            case COL_TYPE_VINT:
+            {
+                pair<bool, int> t = p->getInt(pcs[i].second);
+                PrintWg::pw(t.second);
+                break;
+            }
+            case COL_TYPE_VSTR:
+            {
+                pair<bool, string> t = p->getString(pcs[i].second);
+                PrintWg::pw(t.second);
+                break;
+            }
+        }
+    }
 }
 
 #endif

@@ -343,8 +343,9 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
             // 计算header
             vector<ColStr> p_heads;
             vector<int> p_vtypes;
+            vector<TableHeader> hs;
+            vector<string> & tbnames = $4.clist;
             {
-                vector<TableHeader> hs;
                 Table table;
                 for (int i = 0; i < $4.clist.size(); ++i)
                 {
@@ -382,7 +383,31 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
                     break;
                 case 2:
                 {
-                    printf("error: not implemented\n");
+                    // 取出符合固定值约束的记录
+                    fixSharpWc($6.wclist, hs, tbnames);
+                    Table table;
+                    vector<RecordData> rda[2];
+                    for (int i = 0; i < 2; ++i)
+                    {
+                        string name = $4.clist[i];
+                        string path = dbPath + "/" + name;
+                        table_open(table, path);
+                        rda[i] = find2(table, $6.wclist, name);
+                        table_close(table);
+                    }
+                    if (!(rda[0].size() && rda[1].size())) break;
+                    // 循环匹配
+                    vector<WhereC> cond = uofilter($6.wclist);
+                    vector<int> vtype = gCondType(cond, hs, tbnames);
+                    for (int j = 0; j < rda[0].size(); ++j)
+                        for (int k = 0; k < rda[1].size(); ++k)
+                            if (checkUnion(rda[0][j], rda[1][k],
+                                cond, vtype, tbnames))
+                            {
+                                printUni(rda[0][j], rda[1][k],
+                                    p_heads, p_vtypes, tbnames);
+                                PrintWg::pwln();
+                            }
                 }
                     break;
                 default:
