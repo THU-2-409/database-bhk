@@ -64,3 +64,4 @@ result/*
 !/parser/Value.h
 !/parser/WhereC.h
 !/parser/Makefile
+!/parser/ColStr.h
