@@ -485,7 +485,7 @@ type        :   P_INT '(' VALUE_INT ')'
                     $$.val = $3.val;
                     $$.type = COL_TYPE_VSTR;
                     char buf[32];
-                    sprintf(buf, "CHAR(%d)", $3.val);
+                    sprintf(buf, "VARCHAR(%d)", $3.val);
                     $$.str = string(buf);
                 }
             ;

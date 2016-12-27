@@ -7,7 +7,7 @@ extern yyStruType yylval;
 identifier [A-Za-z][_0-9A-Za-z]* 
 int [0-9]+  
 string '[^']*' 
-simple_op (","|";"|"("|")"|"="|"<"|">"|"*")
+simple_op (","|";"|"("|")"|"="|"<"|">"|"*"|".")
 op_neq "<>"
 op_leq "<="
 op_geq ">="
@@ -66,8 +66,8 @@ whitespaces {delim}+
 "null"		{ return P_NULL; }
 "WHERE"		{ return P_WHERE; }
 "where"		{ return P_WHERE; }
-"CHAR"	{ return P_VARCHAR; }
-"char"	{ return P_VARCHAR; }
+"VARCHAR"	{ return P_VARCHAR; }
+"varchar"	{ return P_VARCHAR; }
 
 {int}		{ sscanf(yytext, "%d", &yylval.val);
 		  yylval.type = VALUE_INT; 
