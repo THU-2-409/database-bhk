@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include <dirent.h>
+#include "../utils.h"
+#include "ColStr.h"
 #include "../table/Table.h"
 #include <vector>
 #include "Value.h"
@@ -199,12 +201,6 @@ void updateData(RecordData & data, vector<SetC> sclist)
     }
 }
 
-bool checkRecCons(RecordData & data, Table & table)
-{
-    // TODO
-    return true;
-}
-
 RecordData genPKupdCheck(SetC s)
 {
     RecordData rd;
@@ -221,6 +217,88 @@ RecordData genPKupdCheck(SetC s)
             return rd;
     }
     return rd;
+}
+
+vector<ColStr> genSelHeader(vector<ColStr> raw,
+        vector<TableHeader> hs,
+        vector<string> tbnames,
+        vector<int> & vtype)
+{
+    if (raw[0].second == "*")
+    {
+        raw.clear();
+        for (int i = 0; i < hs.size(); ++i)
+            for (int j = 0; j < hs[i].getColNums(); ++j)
+            {
+                string name = hs[i].getName(j);
+                raw.push_back(make_pair(tbnames[i], name));
+                if (i + j > 0) printf("|");
+                printf("%s.%s", tbnames[i].c_str(), name.c_str());
+                vtype.push_back(hs[i].getType(j));
+            }
+        printf("\n");
+    }
+    else
+    {
+        for (int i = 0; i < raw.size(); ++i)
+        {
+            if (raw[i].first == string("#"))
+            {
+                for (int j = 0; j < hs.size(); ++j)
+                    if (hs[j].hasName(raw[i].second))
+                    {
+                        raw[i].first = tbnames[j];
+                        break;
+                    }
+            }
+            printf("%s.%s%c", raw[i].first.c_str(),
+                    raw[i].second.c_str(),
+                    (i < raw.size() - 1) ? '|' : '\n');
+            for (int j = 0; j < hs.size(); ++j)
+                if (tbnames[j] == raw[i].first)
+                {
+                    vtype.push_back(hs[j].getType(raw[i].second));
+                    break;
+                }
+        }
+    }
+    return raw;
+}
+
+void printRecData(RecordData & data,
+        vector<ColStr> & hs,
+        vector<int> & vtype,
+        const string & name)
+{
+    for (int i = 0; i < hs.size(); ++i)
+        if (hs[i].first == name &&
+                data.hasName(hs[i].second))
+        {
+            string & col = hs[i].second;
+            if (data.isNULL(col))
+            {
+                PrintWg::pw("NULL");
+                continue;
+            }
+            switch (vtype[i])
+            {
+                case COL_TYPE_VINT:
+                {
+                    pair<bool, int> t = data.getInt(col);
+                    PrintWg::pw(t.second);
+                    break;
+                }
+                case COL_TYPE_VSTR:
+                {
+                    pair<bool, string> t = data.getString(col);
+                    PrintWg::pw(t.second);
+                    break;
+                }
+                default:
+                    printf("ERROR!\n");
+                    break;
+            }
+        }
 }
 
 #endif

@@ -53,6 +53,8 @@ public:
     int getType(string name) { return getType(getCol(name)); }
     int getConstraint(string name)
         { return getConstraint(getCol(name)); }
+    bool hasName(string name) 
+        { return dict.find(name) != dict.end(); }
     
     ByteArray dump();
     int load(char*);
@@ -172,7 +174,9 @@ private:
 };
 
 class RecordData {
- public:
+public:
+    bool hasName(string name) { return m.find(name) != m.end(); }
+
     pair<bool, int> getInt(string fname);//fieldname 属性名
     void setInt(string fname, int value);
 

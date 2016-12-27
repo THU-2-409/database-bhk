@@ -3,6 +3,7 @@
 #include <string>
 #include "../table/Table.h"
 #include <vector>
+#include "ColStr.h"
 #include "Value.h"
 #include "WhereC.h"
 #include "SetC.h"
@@ -18,6 +19,8 @@ struct yyStruType
 
     ColDef def;
 
+    ColStr col;
+
     std::vector<ColDef> defs;
 
     Value v;
@@ -31,6 +34,8 @@ struct yyStruType
     std::vector<SetC> sclist;
 
     std::vector<string> clist;
+
+    std::vector<ColStr> cslist;
 };
 #define YYSTYPE yyStruType  
 
@@ -335,93 +340,55 @@ tbStmt  :   P_CREATE P_TABLE tbName '(' fieldList ')'
         }
         |   P_SELECT selector P_FROM tableList P_WHERE whereClause
         {
-            //printf("fuck1\n");
-            RecordData eqd;
-            vector<WhereC> & vcond = $6.wclist;
-            eqd = whereCeqsFilter(vcond);
-            vector<pair<string, RecordData> > meta, res;
-            vector<pair<string, string> > colsh;
-            vector<int> coltype;
-            bool allcol = "*" == $2.clist[0];
-            //printf("allcol %d\n", allcol);
-            if (!allcol)
+            // 计算header
+            vector<ColStr> p_heads;
+            vector<int> p_vtypes;
             {
-                coltype = vector<int>($2.clist.size(), 0);
-                for (int i = 0; i < $2.clist.size(); ++i)
-                    colsh.push_back(make_pair(string(), $2.clist[i]));
-            }
-            Table table;
-            //printf("fuck3\n");
-            for (int Ti = 0; Ti < $4.clist.size(); ++Ti)
-            {
-                string tb = $4.clist[Ti] + "\0";
-                table_open(table, dbPath + "/" + tb);
-                TableHeader &header = table.getHeader();
-                if (allcol)
+                vector<TableHeader> hs;
+                Table table;
+                for (int i = 0; i < $4.clist.size(); ++i)
                 {
-                    coltype.insert(coltype.end(), header.getColNums(), 0);
-                    for (int i = 0; i < header.getColNums(); ++i)
-                        colsh.push_back(make_pair(tb, header.getName(i)));
-                    /*for (int i = 0; i < header.getColNums(); ++i)
-                          printf("colsh %s\n", colsh[i].second.c_str());*/
+                    string path = dbPath + "/" + $4.clist[i];
+                    table_open(table, path);
+                    hs.push_back(table.getHeader());
+                    table_close(table);
                 }
-                for (int i = 0; i < colsh.size(); ++i)
-                    if (colsh[i].first == tb || (colsh[i].first.empty()
-                        && 0 == Ti))
-                    {
-                        coltype[i] = header.getType(colsh[i].second);
-                    }
-                vector<Record> temp = table.find(eqd);
-                printf("select temp %d\n",(int)temp.size());
-                for (int i = 0; i < temp.size(); ++i)
-                {
-                    RecordData data = temp[i].getData();
-                    if (checkCond(data, vcond))
-                        meta.push_back(make_pair(tb, data));
-                }
-                table_close(table);
+                p_heads = genSelHeader($2.cslist, hs,
+                    $4.clist, p_vtypes);
             }
-            // 联合查询
-            res = meta;
-            // 输出 (! 单表查询)
-            //printf("fuck4\n");
-            for (int i = 0; i < colsh.size(); ++i)
-            {            
-                printf("%s", colsh[i].first.c_str());
-                printf(".%s", colsh[i].second.c_str());
-                printf("%c", (i < colsh.size() - 1) ? '|' : '\n');
-            }
-            //printf("fuck5\n");
-            for (int i = 0; i < res.size(); ++i)
+            // 分类套路
+            switch ($4.clist.size())
             {
-                RecordData &data = res[i].second;
-                for (int j = 0; j < colsh.size(); ++j)
+                case 1:
                 {
-                    string name = colsh[j].second;
-                    if (data.isNULL(name))
+                    Table table;
+                    string name = $4.clist[0];
+                    string path = dbPath + "/" + name;
+                    table_open(table, path);
+                    vector<WhereC> vcond = $6.wclist;
+                    RecordData eqd = whereCeqsFilter(vcond);
+                    vector<Record> meta = table.find(eqd);
+                    for (int i = 0; i < meta.size(); ++i)
                     {
-                        printf("null");
-                    }
-                    else
-                    {
-                        switch (coltype[j])
+                        RecordData data = meta[i].getData();
+                        if (checkCond(data, vcond))
                         {
-                            case COL_TYPE_VINT:
-                                printf("%d", data.getInt(name).second);
-                                break;
-                            case COL_TYPE_VSTR:
-                                printf("%s", data.getString(name)
-                                    .second.c_str());
-                                break;
-                            default:
-                                printf("?? type err ??");
-                                break;
+                            printRecData(data, p_heads, p_vtypes, name);
+                            PrintWg::pwln();
                         }
                     }
-                    printf("%c", (j < colsh.size() - 1) ? '|' : '\n');
+                    table_close(table);
                 }
+                    break;
+                case 2:
+                {
+                    printf("error: not implemented\n");
+                }
+                    break;
+                default:
+                    printf("error: 不支持\n");
+                    break;
             }
-            //printf("fuck6\n");
         }
         ;
 
@@ -493,7 +460,7 @@ type        :   P_INT '(' VALUE_INT ')'
                     $$.val = $3.val;
                     $$.type = COL_TYPE_VSTR;
                     char buf[32];
-                    sprintf(buf, "VARCHAR(%d)", $3.val);
+                    sprintf(buf, "CHAR(%d)", $3.val);
                     $$.str = string(buf);
                 }
             ;
@@ -544,10 +511,14 @@ whereItem   :   col op expr
                     wc.type = $2.type;
                     wc.exprType = $3.type;
                     wc.col = $1.str;
+                    wc.lcol = $1.col;
                     if($3.type == EXPR_VAL)
                         wc.eval = $3.v;
                     else
+                    {
                         wc.ecol = $3.str;
+                        wc.rcol = $3.col;
+                    }
                     $$.wclist.push_back(wc);
                 }
             |   col P_IS P_NULL
@@ -556,6 +527,7 @@ whereItem   :   col op expr
                     wc.type = WC_IS_NULL;
                     wc.exprType = EXPR_VAL;
                     wc.col = $1.str;
+                    wc.lcol = $1.col;
                     $$.wclist.push_back(wc);
                 }
             |   col P_IS P_NOT P_NULL
@@ -564,6 +536,7 @@ whereItem   :   col op expr
                     wc.type = WC_NOT_NULL;
                     wc.exprType = EXPR_VAL;
                     wc.col = $1.str;
+                    wc.lcol = $1.col;
                     $$.wclist.push_back(wc);
                 }
             ;
@@ -582,10 +555,14 @@ whereClause :   whereItem
 col         :   colName
                 {
                     $$.str = $1.str;
+                    $$.col.first = "#";
+                    $$.col.second = $1.str;
                 }
             |   tbName '.' colName
                 {
                     $$.str = $1.str + "." + $3.str;
+                    $$.col.first = $1.str;
+                    $$.col.second = $3.str;
                 }   
             ;
 
@@ -606,6 +583,7 @@ expr        :   value
                 {
                     $$.type = EXPR_COL;
                     $$.str = $1.str;
+                    $$.col = $1.col;
                 }
             ;   
 
@@ -630,23 +608,28 @@ setClause   :   colName '=' value
 selector    :   '*'
                 {
                     $$.clist.push_back("*");
+                    $$.cslist.push_back(genColStr("#", "*"));
                 }
             |   colList
                 {
                     //$$.clist.assign($1.clist.begin(), $1.clist.end());
                     $$.clist = $1.clist;
+                    $$.cslist = $1.cslist;
                 }
             ;
 
 colList     :   col
                 {
                     $$.clist.push_back($1.str);
+                    $$.cslist.push_back($1.col);
                 }
             |   colList ',' col
                 {
                     //$$.clist.assign($1.clist.begin(), $1.clist.end());
                     $$.clist = $1.clist;
                     $$.clist.push_back($3.str);
+                    $$.cslist = $1.cslist;
+                    $$.cslist.push_back($3.col);
                 }
             ;
 

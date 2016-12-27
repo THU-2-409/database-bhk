@@ -66,8 +66,8 @@ whitespaces {delim}+
 "null"		{ return P_NULL; }
 "WHERE"		{ return P_WHERE; }
 "where"		{ return P_WHERE; }
-"VARCHAR"	{ return P_VARCHAR; }
-"varchar"	{ return P_VARCHAR; }
+"CHAR"	{ return P_VARCHAR; }
+"char"	{ return P_VARCHAR; }
 
 {int}		{ sscanf(yytext, "%d", &yylval.val);
 		  yylval.type = VALUE_INT; 

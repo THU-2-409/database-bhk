@@ -3,6 +3,7 @@
 
 #include <string>
 #include "Value.h"
+#include "ColStr.h"
 using namespace std;
 
 #define WC_EQU 20
@@ -25,6 +26,7 @@ class WhereC
  		string col;
         Value eval;
         string ecol;       
+        ColStr lcol, rcol;
 };
 
 #endif
